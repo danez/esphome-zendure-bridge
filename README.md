@@ -16,7 +16,7 @@ A lightweight ESPHome-based Bluetooth bridge for controlling Zendure devices loc
 
 ## Setup
 
-> Once ESPHome is running and connecting to your device via BLE, the device will no longer send telemetry data to the cloud. The device will still be in the App but will not receive updated live data.
+> Once ESPHome is running and connecting to your device via BLE, the device will no longer send telemetry data to the cloud. The device will still be in the App, but will not receive updated live data and the energy modes in the app will stop working. You need to create automations in HA to control the device.
 
   1. Find the MAC address of your Zendure device(s). (see under Guides below)
   2. Find the serial numbers of your batteries.
