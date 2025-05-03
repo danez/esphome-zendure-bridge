@@ -4,7 +4,6 @@ A lightweight ESPHome-based Bluetooth bridge for controlling Zendure devices loc
 
 ![zendure-bridge-esphome](https://github.com/user-attachments/assets/81600a2d-d515-4b36-9899-149ddc910802)
 
-
 ## Supported Zendure Devices
 
 - Hub 1200
@@ -16,6 +15,8 @@ A lightweight ESPHome-based Bluetooth bridge for controlling Zendure devices loc
 - AB2000X
 
 ## Setup
+
+> Once ESPHome is running and connecting to your device via BLE, the device will no longer send telemetry data to the cloud. The device will still be in the App but will not receive updated live data.
 
   1. Find the MAC address of your Zendure device(s). (see under Guides below)
   2. Find the serial numbers of your batteries.
