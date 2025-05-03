@@ -1,0 +1,58 @@
+esphome:
+  name: esp32s3_example
+  friendly_name: ESP32S3 Zendure Hub 2000 with AB2000 Example
+
+esp32:
+  board: esp32-s3-devkitm-1
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+
+wifi:
+  ssid: WIFI
+  password: PASSWORD
+
+logger:
+  level: DEBUG
+
+time:
+  - platform: sntp
+    id: esptime
+    timezone: "UTC"
+    servers:
+      - 0.pool.ntp.org
+      - 1.pool.ntp.org
+      - 2.pool.ntp.org
+
+packages:
+  zendure:
+    url: https://github.com/danez/esphome-zendure-bridge
+    files:
+      - path: packages/hub2000.yaml
+        vars:
+          mac_address: 00:00:00:00:00:00
+          time_id: esptime
+          name: "Hub 2000"
+          id: "hub_2000"
+      - path: packages/ab2000.yaml
+        vars:
+          name: "Battery 1"
+          device_name: "Hub 2000"
+          device_id: "hub_2000"
+          serial_number: "CO4ABCDEF123456"
+      - path: packages/ab2000.yaml
+        vars:
+          name: "Battery 2"
+          device_name: "Hub 2000"
+          device_id: "hub_2000"
+          serial_number: "CO4XXXXXX654321"
+    ref: v1
+    refresh: 1d
+
+sensor:
+  - platform: uptime
+    name: "Uptime"
+    type: seconds
+    entity_category: diagnostic
+    disabled_by_default: true
+  # define your own sensors here
