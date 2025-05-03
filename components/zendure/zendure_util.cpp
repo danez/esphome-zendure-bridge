@@ -76,7 +76,7 @@ namespace esphome {
             bool value
         ) {
             if (sensor == nullptr) return;
-            if (sensor->has_state() && sensor->state == value) return;
+            if (sensor->state == value) return;
             sensor->publish_state(value);
         }
 
