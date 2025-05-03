@@ -4,6 +4,10 @@ defaults:
   # device_id: ""
   # serial_number: ""
 
+external_components:
+  - source: github://danez/esphome-zendure-bridge@main
+    components: [ zendure ]
+
 esphome:
   min_version: "2025.4.1"
   on_boot:

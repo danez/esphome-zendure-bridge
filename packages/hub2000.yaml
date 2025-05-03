@@ -5,6 +5,10 @@ defaults:
   watt_limit: "800"
   # mac_address: ""
 
+external_components:
+  - source: github://danez/esphome-zendure-bridge@main
+    components: [ zendure ]
+
 esphome:
   min_version: "2025.4.1"
 
