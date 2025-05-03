@@ -3,7 +3,7 @@ ble_client.ble_write:
   service_uuid: a002
   characteristic_uuid: c304
   value: !lambda |-
-    char buffer[80];
+    char buffer[86];
     int timestamp = (int) id(${time_id}).now().timestamp;
     snprintf(buffer, sizeof(buffer), "{\"method\":\"read\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"properties\":[\"getAll\"]}", timestamp);
     std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
