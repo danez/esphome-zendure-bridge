@@ -1,13 +1,13 @@
 # defaults:
-  # name: ""
-  # device_id: ""
-  # serial_number: ""
+# name: ""
+# device_id: ""
+# serial_number: ""
 
 external_components:
   # We use a fixed version to ensure compatibility with the current version of the Zendure bridge.
   # When changing the component, make sure to update the version here.
-  - source: github://danez/esphome-zendure-bridge@1.0.0
-    components: [ zendure ]
+  - source: github://danez/esphome-zendure-bridge@1.0.1
+    components: [zendure]
 
 esphome:
   min_version: "2025.4.1"
@@ -19,17 +19,17 @@ esphome:
                 // Define a map of handlers for each key
                 static const sensor_handler_map_t handlers = {
                   {"sn", [](int value) { /* ignore */ }},
-                  {"power", [](int value) { id(${device_id}_battery_${serial_number}_power)->publish_state(value); }},
-                  {"minVol", [](int value) { id(${device_id}_battery_${serial_number}_minVol)->publish_state(value / VOLTAGE_SCALE); }},
-                  {"maxVol", [](int value) { id(${device_id}_battery_${serial_number}_maxVol)->publish_state(value / VOLTAGE_SCALE); }},
-                  {"totalVol", [](int value) { id(${device_id}_battery_${serial_number}_totalVol)->publish_state(value / VOLTAGE_SCALE); }},
-                  {"soh", [](int value) { id(${device_id}_battery_${serial_number}_soh)->publish_state(value / PERCENT_SCALE); }},
-                  {"socLevel", [](int value) { id(${device_id}_battery_${serial_number}_socLevel)->publish_state(value); }},
-                  {"softVersion", [](int value) { id(${device_id}_battery_${serial_number}_softVersion)->publish_state(decode_version(value)); }},
-                  {"maxTemp", [](int value) { id(${device_id}_battery_${serial_number}_maxTemp)->publish_state((value / TEMPERATURE_SCALE) - TEMPERATURE_OFFSET); }},
+                  {"power", [](int value) { publish_state_if_changed(id(${device_id}_battery_${serial_number}_power), value); }},
+                  {"minVol", [](int value) { publish_state_if_changed(id(${device_id}_battery_${serial_number}_minVol), value / VOLTAGE_SCALE); }},
+                  {"maxVol", [](int value) { publish_state_if_changed(id(${device_id}_battery_${serial_number}_maxVol), value / VOLTAGE_SCALE); }},
+                  {"totalVol", [](int value) { publish_state_if_changed(id(${device_id}_battery_${serial_number}_totalVol), value / VOLTAGE_SCALE); }},
+                  {"soh", [](int value) { publish_state_if_changed(id(${device_id}_battery_${serial_number}_soh), value / PERCENT_SCALE); }},
+                  {"socLevel", [](int value) { publish_state_if_changed(id(${device_id}_battery_${serial_number}_socLevel), value); }},
+                  {"softVersion", [](int value) { publish_state_if_changed(id(${device_id}_battery_${serial_number}_softVersion), decode_version(value)); }},
+                  {"maxTemp", [](int value) { publish_state_if_changed(id(${device_id}_battery_${serial_number}_maxTemp), (value / TEMPERATURE_SCALE) - TEMPERATURE_OFFSET); }},
                   {"state", [](int value) {
                     const char* state = (value == 0) ? "Idle" : (value == 1) ? "Charging" : "Discharging";
-                    id(${device_id}_battery_${serial_number}_state)->publish_state(state);
+                    publish_state_if_changed(id(${device_id}_battery_${serial_number}_state), state);
                   }}
                 };
 

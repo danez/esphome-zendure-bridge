@@ -1,4 +1,9 @@
 #include "esphome/components/json/json_util.h"
+#include "esphome/components/binary_sensor/binary_sensor.h"
+#include "esphome/components/select/select.h"
+#include "esphome/components/sensor/sensor.h"
+#include "esphome/components/switch/switch.h"
+#include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/core/log.h"
 #include "zendure_util.h"
 #include <string>
@@ -16,6 +21,52 @@ namespace esphome {
             snprintf(buffer, sizeof(buffer), "%d.%d.%d", major, minor, patch);
 
             return std::string(buffer);
+        }
+
+        void publish_state_if_changed(
+            esphome::sensor::Sensor* sensor,
+            int value
+        ) {
+            if (sensor == nullptr) return;
+            // We only report 2 or 3 decimal places, so we need to check if the value is close enough
+            if (fabs(sensor->state - value) < 0.0001) return;
+            sensor->publish_state(value);
+        }
+
+        void publish_state_if_changed(
+            esphome::text_sensor::TextSensor* sensor,
+            const std::string& value
+        ) {
+            if (sensor == nullptr) return;
+            if (sensor->state == value) return;
+            sensor->publish_state(value);
+        }
+
+        void publish_state_if_changed(
+            esphome::binary_sensor::BinarySensor* sensor,
+            bool value
+        ) {
+            if (sensor == nullptr) return;
+            if (sensor->state == value) return;
+            sensor->publish_state(value);
+        }
+
+        void publish_state_if_changed(
+            esphome::select::Select* sensor,
+            const std::string& value
+        ) {
+            if (sensor == nullptr) return;
+            if (sensor->state == value) return;
+            sensor->publish_state(value);
+        }
+
+        void publish_state_if_changed(
+            esphome::switch_::Switch* sensor,
+            bool value
+        ) {
+            if (sensor == nullptr) return;
+            if (sensor->state == value) return;
+            sensor->publish_state(value);
         }
 
         void find_and_set_device_key(

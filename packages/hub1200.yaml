@@ -8,7 +8,7 @@ defaults:
 external_components:
   # We use a fixed version to ensure compatibility with the current version of the Zendure bridge.
   # When changing the component, make sure to update the version here.
-  - source: github://danez/esphome-zendure-bridge@1.0.0
+  - source: github://danez/esphome-zendure-bridge@1.0.1
     components: [ zendure ]
 
 esphome:
@@ -82,38 +82,38 @@ text_sensor:
       then:
         - lambda: |-
             static const sensor_handler_map_t property_handlers = {
-              {"outputHomePower", [](int value) { id(${id}_outputHomePower).publish_state(value); }},
-              {"solarPower1", [](int value) { id(${id}_solarPower1).publish_state(value); }},
-              {"solarPower2", [](int value) { id(${id}_solarPower2).publish_state(value); }},
-              {"solarInputPower", [](int value) { id(${id}_solarInputPower).publish_state(value); }},
-              {"outputPackPower", [](int value) { id(${id}_outputPackPower).publish_state(value); }},
-              {"electricLevel", [](int value) { id(${id}_electricLevel).publish_state(value); }},
-              {"packInputPower", [](int value) { id(${id}_packInputPower).publish_state(value); }},
-              {"packNum", [](int value) { id(${id}_packNum).publish_state(value); }},
-              {"remainOutTime", [](int value) { id(${id}_remainOutTime).publish_state(value / TIME_HOURS_SCALE); }},
-              {"remainInputTime", [](int value) { id(${id}_remainInputTime).publish_state(value / TIME_HOURS_SCALE); }},
-              {"masterSoftVersion", [](int value) { id(${id}_masterSoftVersion).publish_state(decode_version(value)); }},
-              {"pass", [](int value) { id(${id}_pass).publish_state(value == 0 ? false : true); }},
-              {"outputLimit", [](int value) { id(${id}_outputLimit).publish_state(value); }},
-              {"socSet", [](int value) { id(${id}_socSet).publish_state(value / PERCENT_SCALE); }},
-              {"minSoc", [](int value) { id(${id}_minSoc).publish_state(value / PERCENT_SCALE); }},
-              {"buzzerSwitch", [](int value) { id(${id}_buzzerSwitch).publish_state(!!value); }},
-              {"masterSwitch", [](int value) { id(${id}_masterSwitch).publish_state(!!value); }},
+              {"outputHomePower", [](int value) { publish_state_if_changed(id(${id}_outputHomePower), value); }},
+              {"solarPower1", [](int value) { publish_state_if_changed(id(${id}_solarPower1), value); }},
+              {"solarPower2", [](int value) { publish_state_if_changed(id(${id}_solarPower2), value); }},
+              {"solarInputPower", [](int value) { publish_state_if_changed(id(${id}_solarInputPower), value); }},
+              {"outputPackPower", [](int value) { publish_state_if_changed(id(${id}_outputPackPower), value); }},
+              {"electricLevel", [](int value) { publish_state_if_changed(id(${id}_electricLevel), value); }},
+              {"packInputPower", [](int value) { publish_state_if_changed(id(${id}_packInputPower), value); }},
+              {"packNum", [](int value) { publish_state_if_changed(id(${id}_packNum), value); }},
+              {"remainOutTime", [](int value) { publish_state_if_changed(id(${id}_remainOutTime), value / TIME_HOURS_SCALE); }},
+              {"remainInputTime", [](int value) { publish_state_if_changed(id(${id}_remainInputTime), value / TIME_HOURS_SCALE); }},
+              {"masterSoftVersion", [](int value) { publish_state_if_changed(id(${id}_masterSoftVersion), decode_version(value)); }},
+              {"pass", [](int value) { publish_state_if_changed(id(${id}_pass), value == 0 ? false : true); }},
+              {"outputLimit", [](int value) { publish_state_if_changed(id(${id}_outputLimit), value); }},
+              {"socSet", [](int value) { publish_state_if_changed(id(${id}_socSet), value / PERCENT_SCALE); }},
+              {"minSoc", [](int value) { publish_state_if_changed(id(${id}_minSoc), value / PERCENT_SCALE); }},
+              {"buzzerSwitch", [](int value) { publish_state_if_changed(id(${id}_buzzerSwitch), !!value); }},
+              {"masterSwitch", [](int value) { publish_state_if_changed(id(${id}_masterSwitch), !!value); }},
               {"packState", [](int value) {
                 const char* state = (value == 0) ? "Idle" : (value == 1) ? "Charging" : "Discharging";
-                id(${id}_packState)->publish_state(state);
+                publish_state_if_changed(id(${id}_packState), state);
               }},
-              {"wifiState", [](int value) { id(${id}_wifiState).publish_state(value == 0 ? false : true); }},
-              {"autoRecover", [](int value) { id(${id}_autoRecover).publish_state(!!value); }},
+              {"wifiState", [](int value) { publish_state_if_changed(id(${id}_wifiState), value == 0 ? false : true); }},
+              {"autoRecover", [](int value) { publish_state_if_changed(id(${id}_autoRecover), !!value); }},
               {"passMode", [](int value) {
                 const char* mode = (value == 0) ? "Auto" : (value == 1) ? "Always-Off" : "Always-On";
-                id(${id}_passMode)->publish_state(mode);
+                publish_state_if_changed(id(${id}_passMode), mode);
               }},
               {"hubState", [](int value) {
                 const char* state = (value == 0) ? "Standby" : "Shut Down";
-                id(${id}_hubState)->publish_state(state);
+                publish_state_if_changed(id(${id}_hubState), state);
               }},
-              {"inverseMaxPower", [](int value) { id(${id}_inverseMaxPower).publish_state(value); }}
+              {"inverseMaxPower", [](int value) { publish_state_if_changed(id(${id}_inverseMaxPower), value); }}
             };
 
             json::parse_json(x, [](JsonObject root) -> bool {
