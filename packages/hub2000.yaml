@@ -1,0 +1,469 @@
+defaults:
+  time_id: "zenduretime"
+  name: "Hub2000"
+  id: "hub_2000"
+  watt_limit: "800"
+  # mac_address: ""
+
+esphome:
+  min_version: "2025.4.1"
+  includes:
+    - packages/lib/zendure_version.h
+
+esp32_ble_tracker:
+
+globals:
+  - id: "${id}_device_id"
+    type: std::string
+    restore_value: no
+    initial_value: '""'
+  - id: "${id}_batteries"
+    type: "std::unordered_map<std::string, std::function<void(JsonObject)>>"
+    restore_value: no
+
+interval:
+  - interval: 1min
+    startup_delay: 75s
+    then:
+      - !include
+        file: includes/ble-get-info.yaml
+        vars:
+          device_id: "${id}"
+          time_id: "${time_id}"
+      - !include
+        file: includes/ble-get-all.yaml
+        vars:
+          device_id: "${id}"
+          time_id: "${time_id}"
+
+ble_client:
+  - mac_address: ${mac_address}
+    id: "zendure_ble_${id}"
+    on_connect:
+      then:
+        - esp32_ble_tracker.stop_scan:
+        - delay: 5s
+        - wait_until:
+            condition:
+              time.has_time:
+        - !include
+          file: includes/ble-get-info.yaml
+          vars:
+            device_id: "${id}"
+            time_id: "${time_id}"
+        - !include
+          file: includes/ble-get-all.yaml
+          vars:
+            device_id: "${id}"
+            time_id: "${time_id}"
+    on_disconnect:
+      then:
+        - esp32_ble_tracker.start_scan:
+            continuous: true
+
+text_sensor:
+  - platform: ble_client
+    id: "zendure_ble_receiver_${id}"
+    ble_client_id: "zendure_ble_${id}"
+    internal: true
+    service_uuid: a002
+    characteristic_uuid: c305
+    notify: true
+    update_interval: never
+    on_notify:
+      then:
+        - lambda: |-
+            json::parse_json(x, [](JsonObject root) -> bool {
+              if (root.containsKey("deviceId") && id(${id}_device_id) == "") {
+                id(${id}_device_id) = root["deviceId"].as<std::string>();
+                ESP_LOGI("${id}", "Found device ID: %s", id(${id}_device_id).c_str());
+
+                return true;
+              }
+
+              if (root["method"] == "report") {
+                if (root.containsKey("packData")) {
+                  JsonArray pack_data = root["packData"].as<JsonArray>();
+
+                  if (!pack_data.isNull()) {
+                    for (JsonObject pack : pack_data) {
+                      std::string sn = pack["sn"].as<std::string>();
+                      if (!sn.empty()) {
+                        auto battery_handler = id(${id}_batteries).find(sn);
+
+                        if (battery_handler != id(${id}_batteries).end()) {
+                          battery_handler->second(pack);
+                        }
+                      }
+                    }
+                  }
+                }
+
+                JsonObject properties = root["properties"];
+                if (!properties.isNull()) {
+                  for (JsonObject::iterator it = properties.begin(); it != properties.end(); ++it) {
+                    std::string key = it->key().c_str();
+                    int value = it->value().as<int>();
+
+                    if (key == "outputHomePower") {
+                      id(${id}_outputHomePower).publish_state(value);
+                    } else if (key == "solarPower1") {
+                      id(${id}_solarPower1).publish_state(value);
+                    } else if (key == "solarPower2") {
+                      id(${id}_solarPower2).publish_state(value);
+                    } else if (key == "solarInputPower") {
+                      id(${id}_solarInputPower).publish_state(value);
+                    } else if (key == "outputPackPower") {
+                      id(${id}_outputPackPower).publish_state(value);
+                    } else if (key == "electricLevel") {
+                      id(${id}_electricLevel).publish_state(value);
+                    } else if (key == "packInputPower") {
+                      id(${id}_packInputPower).publish_state(value);
+                    } else if (key == "packNum") {
+                      id(${id}_packNum).publish_state(value);
+                    } else if (key == "remainOutTime") {
+                      id(${id}_remainOutTime).publish_state(value/60.0f);
+                    }  else if (key == "remainInputTime") {
+                      id(${id}_remainInputTime).publish_state(value/60.0f);
+                    } else if (key == "masterSoftVersion") {
+                      id(${id}_masterSoftVersion).publish_state(zendure::version::decode_version(value));
+                    } else if (key == "pass") {
+                      id(${id}_pass).publish_state(value == 0 ? false : true);
+                    } else if (key == "outputLimit") {
+                      id(${id}_outputLimit).publish_state(value);
+                    } else if (key == "socSet") {
+                      id(${id}_socSet).publish_state(value/10);
+                    } else if (key == "minSoc") {
+                      id(${id}_minSoc).publish_state(value/10);
+                    } else if (key == "buzzerSwitch") {
+                      id(${id}_buzzerSwitch).publish_state(!!value);
+                    } else if (key == "masterSwitch") {
+                      id(${id}_masterSwitch).publish_state(!!value);
+                    } else if (key == "packState") {
+                      if (value == 0) {
+                        id(${id}_packState).publish_state("Idle");
+                      } else if (value == 1) {
+                        id(${id}_packState).publish_state("Charging");
+                      } else {
+                        id(${id}_packState).publish_state("Discharging");
+                      }
+                    } else if (key == "wifiState") {
+                      id(${id}_wifiState).publish_state(value == 0 ? false : true);
+                    } else if (key == "autoRecover") {
+                      id(${id}_autoRecover).publish_state(!!value);
+                    } else if (key == "passMode") {
+                      if (value == 0) {
+                        id(${id}_passMode).publish_state("Auto");
+                      } else if (value == 1) {
+                        id(${id}_passMode).publish_state("Always-Off");
+                      } else {
+                        id(${id}_passMode).publish_state("Always-On");
+                      }
+                    } else if (key == "hubState") {
+                      if (value == 0) {
+                        id(${id}_hubState).publish_state("Standby");
+                      } else {
+                        id(${id}_hubState).publish_state("Shut Down");
+                      }
+                    } else if (key == "inverseMaxPower") {
+                      id(${id}_inverseMaxPower).publish_state(value);
+                    } else {
+                      ESP_LOGD("${id}", "Device sensor '%s' is not setup", key.c_str());
+                    }
+                  }
+
+                  return true;
+                }
+              }
+
+              return false;
+            });
+  - platform: template
+    id: "${id}_packState"
+    name: "${name} Pack State"
+    icon: "mdi:battery-charging"
+  - platform: template
+    name: "${name} Master Soft Version"
+    entity_category: diagnostic
+    disabled_by_default: true
+    id: "${id}_masterSoftVersion"
+
+sensor:
+  - platform: ble_client
+    type: rssi
+    ble_client_id: "zendure_ble_${id}"
+    update_interval: 60s
+    name: "${name} RSSI"
+    entity_category: diagnostic
+    disabled_by_default: true
+  - platform: template
+    name: "${name} Output Home Power"
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: "W"
+    accuracy_decimals: 0
+    id: "${id}_outputHomePower"
+  - platform: template
+    name: "${name} Solar Power 1"
+    icon: "mdi:solar-power"
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: "W"
+    accuracy_decimals: 0
+    id: "${id}_solarPower1"
+  - platform: template
+    name: "${name} Solar Power 2"
+    icon: "mdi:solar-power"
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: "W"
+    accuracy_decimals: 0
+    id: "${id}_solarPower2"
+  - platform: template
+    name: "${name} Solar Input Power"
+    icon: "mdi:solar-power"
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: "W"
+    accuracy_decimals: 0
+    id: "${id}_solarInputPower"
+  - platform: template
+    name: "${name} Output Pack Power"
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: "W"
+    accuracy_decimals: 0
+    id: "${id}_outputPackPower"
+  - platform: template
+    name: "${name} Electricity Level"
+    device_class: battery
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    id: "${id}_electricLevel"
+  - platform: template
+    name: "${name} Pack Input Power"
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: "W"
+    accuracy_decimals: 0
+    id: "${id}_packInputPower"
+  - platform: template
+    name: "${name} Remain Out Time"
+    device_class: duration
+    state_class: measurement
+    unit_of_measurement: "h"
+    accuracy_decimals: 2
+    id: "${id}_remainOutTime"
+  - platform: template
+    name: "${name} Remain Input Time"
+    device_class: duration
+    state_class: measurement
+    unit_of_measurement: "h"
+    accuracy_decimals: 2
+    id: "${id}_remainInputTime"
+  - platform: template
+    name: "${name} Pack Num"
+    entity_category: diagnostic
+    disabled_by_default: true
+    accuracy_decimals: 0
+    id: "${id}_packNum"
+
+binary_sensor:
+  - platform: template
+    name: "${name} Pass"
+    id: "${id}_pass"
+  - platform: template
+    id: "${id}_wifiState"
+    name: "${name} Wifi State"
+    device_class: connectivity
+    icon: "mdi:wifi"
+    entity_category: diagnostic
+    disabled_by_default: true
+
+select:
+  - platform: template
+    name: "${name} Hub State"
+    id: "${id}_hubState"
+    icon: "mdi:power-settings"
+    options:
+      - "Standby"
+      - "Shut Down"
+    optimistic: true
+    restore_value: true
+    set_action:
+      - ble_client.ble_write:
+          id: "zendure_ble_${id}"
+          service_uuid: a002
+          characteristic_uuid: c304
+          value: !lambda |-
+            char buffer[120];
+            int timestamp = (int) id(${time_id}).now().timestamp;
+            int propValue = x == "Standby" ? 0 : 1;
+            snprintf(buffer, sizeof(buffer), "{\"method\":\"write\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"deviceId\":\"%s\",\"properties\":{\"hubState\":%d}}", timestamp, id(${id}_device_id).c_str(), propValue);
+            std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
+            ESP_LOGD("${id}", "Sending Command '%s'", buffer);
+            return value;
+  - platform: template
+    name: "${name} Pass Mode"
+    id: "${id}_passMode"
+    icon: "mdi:arrow-decision"
+    options:
+      - "Auto"
+      - "Always-Off"
+      - "Always-On"
+    optimistic: true
+    restore_value: true
+    set_action:
+      - ble_client.ble_write:
+          id: "zendure_ble_${id}"
+          service_uuid: a002
+          characteristic_uuid: c304
+          value: !lambda |-
+            char buffer[120];
+            int timestamp = (int) id(${time_id}).now().timestamp;
+            int propValue = x == "Auto" ? 0 : (x == "Always-Off" ? 1 : 2);
+            snprintf(buffer, sizeof(buffer), "{\"method\":\"write\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"deviceId\":\"%s\",\"properties\":{\"passMode\":%d}}", timestamp, id(${id}_device_id).c_str(), propValue);
+            std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
+            ESP_LOGD("${id}", "Sending Command '%s'", buffer);
+            return value;
+
+switch:
+  - platform: template
+    name: "${name} Buzzer Switch"
+    id: "${id}_buzzerSwitch"
+    optimistic: true
+    icon: "mdi:volume-high"
+    turn_on_action:
+      - !include
+        file: includes/ble-set-property-value.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: buzzerSwitch
+          value: 1
+    turn_off_action:
+      - !include
+        file: includes/ble-set-property-value.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: buzzerSwitch
+          value: 0
+  - platform: template
+    name: "${name} Master Switch"
+    id: "${id}_masterSwitch"
+    optimistic: true
+    icon: "mdi:power"
+    turn_on_action:
+      - !include
+        file: includes/ble-set-property-value.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: masterSwitch
+          value: 1
+    turn_off_action:
+      - !include
+        file: includes/ble-set-property-value.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: masterSwitch
+          value: 0
+  - platform: template
+    name: "${name} Auto Recover"
+    id: "${id}_autoRecover"
+    optimistic: true
+    icon: "mdi:restore"
+    turn_on_action:
+      - !include
+        file: includes/ble-set-property-value.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: autoRecover
+          value: 1
+    turn_off_action:
+      - !include
+        file: includes/ble-set-property-value.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: autoRecover
+          value: 0
+
+number:
+  - platform: template
+    name: "${name} Output Limit"
+    device_class: power
+    mode: slider
+    id: "${id}_outputLimit"
+    unit_of_measurement: W
+    min_value: 0
+    max_value: ${watt_limit}
+    step: 1
+    optimistic: true
+    set_action:
+      - !include
+        file: includes/ble-set-property.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: outputLimit
+          append_value: ""
+  - platform: template
+    name: "${name} Min Soc"
+    mode: slider
+    id: "${id}_minSoc"
+    icon: "mdi:battery-arrow-down"
+    unit_of_measurement: "%"
+    min_value: 0
+    max_value: 100
+    step: 1
+    optimistic: true
+    set_action:
+      - !include
+        file: includes/ble-set-property.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: minSoc
+          append_value: 0
+  - platform: template
+    name: "${name} Soc Set"
+    mode: slider
+    id: "${id}_socSet"
+    icon: "mdi:battery-arrow-up"
+    unit_of_measurement: "%"
+    min_value: 0
+    max_value: 100
+    step: 1
+    optimistic: true
+    set_action:
+      - !include
+        file: includes/ble-set-property.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: socSet
+          append_value: 0
+  - platform: template
+    name: "${name} Inverse Max Power"
+    device_class: power
+    mode: slider
+    id: "${id}_inverseMaxPower"
+    unit_of_measurement: W
+    min_value: 0
+    max_value: ${watt_limit}
+    step: 1
+    icon: "mdi:power-plug"
+    optimistic: true
+    set_action:
+      - !include
+        file: includes/ble-set-property.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: inverseMaxPower
+          append_value: ""

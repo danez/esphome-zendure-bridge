@@ -1,0 +1,11 @@
+ble_client.ble_write:
+  id: "zendure_ble_${device_id}"
+  service_uuid: a002
+  characteristic_uuid: c304
+  value: !lambda |-
+    char buffer[61];
+    int timestamp = (int) id(${time_id}).now().timestamp;
+    snprintf(buffer, sizeof(buffer), "{\"method\":\"getInfo\",\"timestamp\":\"%d\",\"messageId\":\"none\"}", timestamp);
+    std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
+    ESP_LOGD("${device_id}", "Sending Command '%s'", buffer);
+    return value;

@@ -1,0 +1,115 @@
+defaults:
+  name: "AB2000"
+  # device_name: ""
+  # device_id: ""
+  # serial_number: ""
+
+esphome:
+  min_version: "2025.4.1"
+  includes:
+    - packages/zendure_version.h
+  on_boot:
+    - then:
+        - lambda: |-
+            id(${device_id}_batteries).insert(
+              std::make_pair("${serial_number}", [](JsonObject pack) -> void {
+                for (JsonObject::iterator it = pack.begin(); it != pack.end(); ++it) {
+                  std::string key = it->key().c_str();
+                  int value = it->value().as<int>();
+
+                  if (key == "power") {
+                    id(${device_id}_battery_${serial_number}_power)->publish_state(value);
+                  } else if (key == "minVol") {
+                    id(${device_id}_battery_${serial_number}_minVol)->publish_state(value/100.0f);
+                  } else if (key == "maxVol") {
+                    id(${device_id}_battery_${serial_number}_maxVol)->publish_state(value/100.0f);
+                  } else if (key == "totalVol") {
+                    id(${device_id}_battery_${serial_number}_totalVol)->publish_state(value/100.0f);
+                  } else if (key == "soh") {
+                    id(${device_id}_battery_${serial_number}_soh)->publish_state(value/10.0f);
+                  } else if (key == "socLevel") {
+                    id(${device_id}_battery_${serial_number}_socLevel)->publish_state(value);
+                  } else if (key == "softVersion") {
+                    id(${device_id}_battery_${serial_number}_softVersion)->publish_state(zendure::version::decode_version(value));
+                  } else if (key == "maxTemp") {
+                    id(${device_id}_battery_${serial_number}_maxTemp)->publish_state((value/10.0f) - 273.15f);
+                  } else if (key == "state") {
+                      if (value == 0) {
+                        id(${device_id}_battery_${serial_number}_state).publish_state("Idle");
+                      } else if (value == 1) {
+                        id(${device_id}_battery_${serial_number}_state).publish_state("Charging");
+                      } else {
+                        id(${device_id}_battery_${serial_number}_state).publish_state("Discharging");
+                      }
+                  } else if (key != "sn") {
+                    ESP_LOGD("${device_id}", "packData sensor '%s' is not setup", key.c_str());
+                  }
+                }
+              })
+            );
+
+sensor:
+  - platform: template
+    id: "${device_id}_battery_${serial_number}_power"
+    name: "${device_name} ${name} Power"
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: "W"
+    accuracy_decimals: 0
+  - platform: template
+    id: "${device_id}_battery_${serial_number}_minVol"
+    name: "${device_name} ${name} Min Vol"
+    device_class: voltage
+    state_class: measurement
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+  - platform: template
+    id: "${device_id}_battery_${serial_number}_maxVol"
+    name: "${device_name} ${name} Max Vol"
+    device_class: voltage
+    state_class: measurement
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+  - platform: template
+    id: "${device_id}_battery_${serial_number}_totalVol"
+    name: "${device_name} ${name} Total Vol"
+    device_class: voltage
+    state_class: measurement
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+  - platform: template
+    id: "${device_id}_battery_${serial_number}_soh"
+    name: "${device_name} ${name} SoH"
+    state_class: measurement
+    icon: "mdi:battery-heart-variant"
+    unit_of_measurement: "%"
+    accuracy_decimals: 1
+    entity_category: diagnostic
+    disabled_by_default: true
+  - platform: template
+    id: "${device_id}_battery_${serial_number}_socLevel"
+    name: "${device_name} ${name} SoC Level"
+    device_class: battery
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+  - platform: template
+    id: "${device_id}_battery_${serial_number}_maxTemp"
+    name: "${device_name} ${name} Max Temp"
+    device_class: temperature
+    state_class: measurement
+    unit_of_measurement: "°C"
+    accuracy_decimals: 2
+    entity_category: diagnostic
+    disabled_by_default: true
+
+text_sensor:
+  - platform: template
+    id: "${device_id}_battery_${serial_number}_softVersion"
+    name: "${device_name} ${name} Soft Version"
+    entity_category: diagnostic
+    disabled_by_default: true
+  - platform: template
+    id: "${device_id}_battery_${serial_number}_state"
+    name: "${device_name} ${name} State"
+    icon: "mdi:battery-charging"

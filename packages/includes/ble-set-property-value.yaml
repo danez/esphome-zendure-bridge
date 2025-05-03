@@ -1,0 +1,21 @@
+ble_client.ble_write:
+  id: "zendure_ble_${device_id}"
+  service_uuid: a002
+  characteristic_uuid: c304
+  value: !lambda |-
+    char buffer[128];
+    int timestamp = (int) id(${time_id}).now().timestamp;
+    int len = snprintf(
+      buffer,
+      sizeof(buffer),
+      "{\"method\":\"write\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"deviceId\":\"%s\",\"properties\":{\"${key}\":${value}}}",
+      timestamp,
+      id(${device_id}_device_id).c_str()
+    );
+    if (len >= sizeof(buffer)) {
+      ESP_LOGE("${device_id}", "Buffer overflow detected! Partial buffer: '%s'", buffer);
+      return {};
+    }
+    std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
+    ESP_LOGI("${device_id}", "Sending Command '%s'", buffer);
+    return value;
