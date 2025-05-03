@@ -2,6 +2,9 @@
 
 A lightweight ESPHome-based Bluetooth bridge for controlling Zendure devices locally with Home Assistant — no cloud required. This project enables secure, low-latency communication between your Zendure device and Home Assistant using ESPHome and a compatible ESP device, bypassing the Zendure cloud and improving privacy, speed, and reliability.
 
+![zendure-bridge-esphome](https://github.com/user-attachments/assets/81600a2d-d515-4b36-9899-149ddc910802)
+
+
 ## Supported Zendure Devices
 
 - Hub 1200
@@ -48,6 +51,6 @@ esp32_ble_tracker:
 
 2. Connect your ESP Device via USB
 3. Flash the program to your device (`esphome run ble_scanner.yaml`)
-4. Power on your Zendure device and look for its MAC address in the logs. Its name will start with `Zen`
+4. Power on your Zendure device and look for its MAC address (e.g., C3:7A:7F:9D:1A:B4) in the logs. Its name will start with `Zen`
 
 Once you have the MAC address, copy it — you'll need it in the main `esphome-zendure-bridge` config!
