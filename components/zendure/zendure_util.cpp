@@ -30,7 +30,7 @@ namespace esphome {
         ) {
             if (sensor == nullptr) return;
             // We only report 2 or 3 decimal places, so we need to check if the value is close enough
-            if (fabs(sensor->state - value) < 0.0001) return;
+            if (sensor->has_state() && fabs(sensor->state - value) < 0.0001) return;
             sensor->publish_state(value);
         }
 
@@ -40,7 +40,7 @@ namespace esphome {
         ) {
             if (sensor == nullptr) return;
             // We only report 2 or 3 decimal places, so we need to check if the value is close enough
-            if (fabs(sensor->state - value) < 0.0001) return;
+            if (sensor->has_state() && fabs(sensor->state - value) < 0.0001) return;
             sensor->publish_state(value);
         }
 
@@ -49,7 +49,7 @@ namespace esphome {
             const std::string& value
         ) {
             if (sensor == nullptr) return;
-            if (sensor->state == value) return;
+            if (sensor->has_state() && sensor->state == value) return;
             sensor->publish_state(value);
         }
 
@@ -58,7 +58,7 @@ namespace esphome {
             bool value
         ) {
             if (sensor == nullptr) return;
-            if (sensor->state == value) return;
+            if (sensor->has_state() && sensor->state == value) return;
             sensor->publish_state(value);
         }
 
@@ -67,7 +67,7 @@ namespace esphome {
             const std::string& value
         ) {
             if (sensor == nullptr) return;
-            if (sensor->state == value) return;
+            if (sensor->has_state() && sensor->state == value) return;
             sensor->publish_state(value);
         }
 
@@ -76,7 +76,7 @@ namespace esphome {
             bool value
         ) {
             if (sensor == nullptr) return;
-            if (sensor->state == value) return;
+            if (sensor->has_state() && sensor->state == value) return;
             sensor->publish_state(value);
         }
 
