@@ -6,7 +6,9 @@ defaults:
   # mac_address: ""
 
 external_components:
-  - source: github://danez/esphome-zendure-bridge@main
+  # We use a fixed commit hash to ensure compatibility with the current version of the Zendure bridge.
+  # When changing the component, make sure to update the commit hash here.
+  - source: github://danez/esphome-zendure-bridge@09007ef
     components: [ zendure ]
 
 esphome:
