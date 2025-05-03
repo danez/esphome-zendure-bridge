@@ -1,6 +1,5 @@
 defaults:
-  name: "AB1000"
-  # device_name: ""
+  # name: ""
   # device_id: ""
   # serial_number: ""
 
@@ -44,35 +43,35 @@ zendure:
 sensor:
   - platform: template
     id: "${device_id}_battery_${serial_number}_power"
-    name: "${device_name} ${name} Power"
+    name: "${name} Power"
     device_class: power
     state_class: measurement
     unit_of_measurement: "W"
     accuracy_decimals: 0
   - platform: template
     id: "${device_id}_battery_${serial_number}_minVol"
-    name: "${device_name} ${name} Min Vol"
+    name: "${name} Min Vol"
     device_class: voltage
     state_class: measurement
     unit_of_measurement: "V"
     accuracy_decimals: 2
   - platform: template
     id: "${device_id}_battery_${serial_number}_maxVol"
-    name: "${device_name} ${name} Max Vol"
+    name: "${name} Max Vol"
     device_class: voltage
     state_class: measurement
     unit_of_measurement: "V"
     accuracy_decimals: 2
   - platform: template
     id: "${device_id}_battery_${serial_number}_totalVol"
-    name: "${device_name} ${name} Total Vol"
+    name: "${name} Total Vol"
     device_class: voltage
     state_class: measurement
     unit_of_measurement: "V"
     accuracy_decimals: 2
   - platform: template
     id: "${device_id}_battery_${serial_number}_soh"
-    name: "${device_name} ${name} SoH"
+    name: "${name} SoH"
     state_class: measurement
     icon: "mdi:battery-heart-variant"
     unit_of_measurement: "%"
@@ -81,14 +80,14 @@ sensor:
     disabled_by_default: true
   - platform: template
     id: "${device_id}_battery_${serial_number}_socLevel"
-    name: "${device_name} ${name} SoC Level"
+    name: "${name} SoC Level"
     device_class: battery
     state_class: measurement
     unit_of_measurement: "%"
     accuracy_decimals: 0
   - platform: template
     id: "${device_id}_battery_${serial_number}_maxTemp"
-    name: "${device_name} ${name} Max Temp"
+    name: "${name} Max Temp"
     device_class: temperature
     state_class: measurement
     unit_of_measurement: "°C"
@@ -99,10 +98,10 @@ sensor:
 text_sensor:
   - platform: template
     id: "${device_id}_battery_${serial_number}_softVersion"
-    name: "${device_name} ${name} Soft Version"
+    name: "${name} Soft Version"
     entity_category: diagnostic
     disabled_by_default: true
   - platform: template
     id: "${device_id}_battery_${serial_number}_state"
-    name: "${device_name} ${name} State"
+    name: "${name} State"
     icon: "mdi:battery-charging"

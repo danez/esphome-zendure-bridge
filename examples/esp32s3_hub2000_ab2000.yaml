@@ -13,7 +13,7 @@ wifi:
   password: PASSWORD
 
 logger:
-  level: DEBUG
+  level: INFO
 
 time:
   - platform: sntp
@@ -36,23 +36,13 @@ packages:
           id: "hub_2000"
       - path: packages/ab2000.yaml
         vars:
-          name: "Battery 1"
-          device_name: "Hub 2000"
+          name: "Hub 2000 Battery 1"
           device_id: "hub_2000"
           serial_number: "CO4ABCDEF123456"
       - path: packages/ab2000.yaml
         vars:
-          name: "Battery 2"
-          device_name: "Hub 2000"
+          name: "Hub 2000 Battery 2"
           device_id: "hub_2000"
           serial_number: "CO4XXXXXX654321"
     ref: v1
     refresh: 1d
-
-sensor:
-  - platform: uptime
-    name: "Uptime"
-    type: seconds
-    entity_category: diagnostic
-    disabled_by_default: true
-  # define your own sensors here

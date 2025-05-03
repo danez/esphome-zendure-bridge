@@ -17,6 +17,46 @@ A lightweight ESPHome-based Bluetooth bridge for controlling Zendure devices loc
 
 ## Setup
 
+  1. Find the MAC address of your Zendure device(s). (see under Guides below)
+  2. Find the serial numbers of your batteries.
+  3. Create a main esphome configuration similar to one of the files in examples/
+     Refer to https://esphome.io/guides/getting_started_hassio to see how to get started
+  4. Configure the Zendure package correctly in your esphome yaml file
+```yaml
+time:
+  - platform: sntp
+    id: esptime
+    timezone: "UTC"
+    servers:
+      - 0.pool.ntp.org
+
+packages:
+  zendure:
+    url: https://github.com/danez/esphome-zendure-bridge
+    files:
+      - path: packages/hub2000.yaml # choose your device: hub2000, hub1200
+        vars:
+          mac_address: 00:00:00:00:00:00 # set the MAC address you looked for before here
+          time_id: esptime # the id of the time component above
+          name: "Hub 2000" # choose how you want your device to be named, can be any name and will also be used in the Home Assistant ID and name. Make sure that every device has a different name.
+          id: "hub_2000" # the internal ID of the device, if you have multiple devices the id needs to be different
+      - path: packages/ab2000.yaml # choose your battery: ab1000, ab2000
+        vars:
+          name: "Hub 2000 Battery 1" # choose how you want your battery to be named, can be any name and will also be used in the Home Assistant ID and name
+          device_id: "hub_2000" # Important!! Needs to be exactly the same as the id of your device where the battery is connected
+          serial_number: "CO4ABCDEF123456" # The serial number of your battery
+      - path: packages/ab2000.yaml
+        vars:
+          name: "Hub 2000 Battery 2" # Ensure when having multiple devices/batteries that they have different names
+          device_id: "hub_2000"
+          serial_number: "CO4XXXXXX654321"
+    ref: v1
+    refresh: 1d # Update the package once a day
+```
+  5. Follow the steps of ESPHome Device Build to get your ESP device flashed.
+
+## Guides
+
 ### 🔍 Finding Your Zendure Device's Bluetooth MAC Address
 
 Before connecting your ESP32 to your Zendure Hub, you need to identify its Bluetooth MAC address. There are two simple ways to do this:
