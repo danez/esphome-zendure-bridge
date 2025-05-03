@@ -1,0 +1,56 @@
+esphome:
+  name: esp32zendureexample
+  friendly_name: ESP32 Zendure Example
+
+esp32:
+  board: az-delivery-devkit-v4
+  framework:
+    type: esp-idf
+    advanced:
+      ignore_efuse_mac_crc: true
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components:
+      - zendure
+
+packages:
+  hub2000: !include
+    file: ../packages/hub2000.yaml
+    vars:
+      mac_address: 00:00:00:00:00:00
+      time_id: esptime
+      name: "Hub 2000"
+      id: "hub_2000"
+  ab2000: !include
+    file: ../packages/ab2000.yaml
+    vars:
+      name: "Battery 1"
+      device_name: "Hub 2000"
+      device_id: "hub_2000"
+      serial_number: "CO4ABCDEF123456"
+
+wifi:
+  ssid: WIFI
+  password: PASSWORD
+
+time:
+  - platform: sntp
+    id: esptime
+    timezone: "UTC"
+    servers:
+      - 0.pool.ntp.org
+      - 1.pool.ntp.org
+      - 2.pool.ntp.org
+
+logger:
+  level: DEBUG
+
+sensor:
+  - platform: uptime
+    name: "Uptime"
+    type: seconds
+    entity_category: diagnostic
+    disabled_by_default: true

@@ -7,8 +7,10 @@ defaults:
 
 esphome:
   min_version: "2025.4.1"
-  includes:
-    - packages/lib/zendure_version.h
+
+json:
+
+zendure:
 
 esp32_ble_tracker:
 
@@ -18,7 +20,7 @@ globals:
     restore_value: no
     initial_value: '""'
   - id: "${id}_batteries"
-    type: "std::unordered_map<std::string, std::function<void(JsonObject)>>"
+    type: "battery_handler_map_t"
     restore_value: no
 
 interval:
@@ -73,110 +75,51 @@ text_sensor:
     on_notify:
       then:
         - lambda: |-
+            static const sensor_handler_map_t property_handlers = {
+              {"outputHomePower", [](int value) { id(${id}_outputHomePower).publish_state(value); }},
+              {"solarPower1", [](int value) { id(${id}_solarPower1).publish_state(value); }},
+              {"solarPower2", [](int value) { id(${id}_solarPower2).publish_state(value); }},
+              {"solarInputPower", [](int value) { id(${id}_solarInputPower).publish_state(value); }},
+              {"outputPackPower", [](int value) { id(${id}_outputPackPower).publish_state(value); }},
+              {"electricLevel", [](int value) { id(${id}_electricLevel).publish_state(value); }},
+              {"packInputPower", [](int value) { id(${id}_packInputPower).publish_state(value); }},
+              {"packNum", [](int value) { id(${id}_packNum).publish_state(value); }},
+              {"remainOutTime", [](int value) { id(${id}_remainOutTime).publish_state(value / TIME_HOURS_SCALE); }},
+              {"remainInputTime", [](int value) { id(${id}_remainInputTime).publish_state(value / TIME_HOURS_SCALE); }},
+              {"masterSoftVersion", [](int value) { id(${id}_masterSoftVersion).publish_state(decode_version(value)); }},
+              {"pass", [](int value) { id(${id}_pass).publish_state(value == 0 ? false : true); }},
+              {"outputLimit", [](int value) { id(${id}_outputLimit).publish_state(value); }},
+              {"socSet", [](int value) { id(${id}_socSet).publish_state(value / PERCENT_SCALE); }},
+              {"minSoc", [](int value) { id(${id}_minSoc).publish_state(value / PERCENT_SCALE); }},
+              {"buzzerSwitch", [](int value) { id(${id}_buzzerSwitch).publish_state(!!value); }},
+              {"masterSwitch", [](int value) { id(${id}_masterSwitch).publish_state(!!value); }},
+              {"packState", [](int value) {
+                const char* state = (value == 0) ? "Idle" : (value == 1) ? "Charging" : "Discharging";
+                id(${id}_packState)->publish_state(state);
+              }},
+              {"wifiState", [](int value) { id(${id}_wifiState).publish_state(value == 0 ? false : true); }},
+              {"autoRecover", [](int value) { id(${id}_autoRecover).publish_state(!!value); }},
+              {"passMode", [](int value) {
+                const char* mode = (value == 0) ? "Auto" : (value == 1) ? "Always-Off" : "Always-On";
+                id(${id}_passMode)->publish_state(mode);
+              }},
+              {"hubState", [](int value) {
+                const char* state = (value == 0) ? "Standby" : "Shut Down";
+                id(${id}_hubState)->publish_state(state);
+              }},
+              {"inverseMaxPower", [](int value) { id(${id}_inverseMaxPower).publish_state(value); }}
+            };
+
             json::parse_json(x, [](JsonObject root) -> bool {
-              if (root.containsKey("deviceId") && id(${id}_device_id) == "") {
-                id(${id}_device_id) = root["deviceId"].as<std::string>();
-                ESP_LOGI("${id}", "Found device ID: %s", id(${id}_device_id).c_str());
+              handle_device_message(
+                root,
+                property_handlers,
+                id(${id}_batteries),
+                id(${id}_device_id),
+                "${id}"
+              );
 
-                return true;
-              }
-
-              if (root["method"] == "report") {
-                if (root.containsKey("packData")) {
-                  JsonArray pack_data = root["packData"].as<JsonArray>();
-
-                  if (!pack_data.isNull()) {
-                    for (JsonObject pack : pack_data) {
-                      std::string sn = pack["sn"].as<std::string>();
-                      if (!sn.empty()) {
-                        auto battery_handler = id(${id}_batteries).find(sn);
-
-                        if (battery_handler != id(${id}_batteries).end()) {
-                          battery_handler->second(pack);
-                        }
-                      }
-                    }
-                  }
-                }
-
-                JsonObject properties = root["properties"];
-                if (!properties.isNull()) {
-                  for (JsonObject::iterator it = properties.begin(); it != properties.end(); ++it) {
-                    std::string key = it->key().c_str();
-                    int value = it->value().as<int>();
-
-                    if (key == "outputHomePower") {
-                      id(${id}_outputHomePower).publish_state(value);
-                    } else if (key == "solarPower1") {
-                      id(${id}_solarPower1).publish_state(value);
-                    } else if (key == "solarPower2") {
-                      id(${id}_solarPower2).publish_state(value);
-                    } else if (key == "solarInputPower") {
-                      id(${id}_solarInputPower).publish_state(value);
-                    } else if (key == "outputPackPower") {
-                      id(${id}_outputPackPower).publish_state(value);
-                    } else if (key == "electricLevel") {
-                      id(${id}_electricLevel).publish_state(value);
-                    } else if (key == "packInputPower") {
-                      id(${id}_packInputPower).publish_state(value);
-                    } else if (key == "packNum") {
-                      id(${id}_packNum).publish_state(value);
-                    } else if (key == "remainOutTime") {
-                      id(${id}_remainOutTime).publish_state(value/60.0f);
-                    }  else if (key == "remainInputTime") {
-                      id(${id}_remainInputTime).publish_state(value/60.0f);
-                    } else if (key == "masterSoftVersion") {
-                      id(${id}_masterSoftVersion).publish_state(zendure::version::decode_version(value));
-                    } else if (key == "pass") {
-                      id(${id}_pass).publish_state(value == 0 ? false : true);
-                    } else if (key == "outputLimit") {
-                      id(${id}_outputLimit).publish_state(value);
-                    } else if (key == "socSet") {
-                      id(${id}_socSet).publish_state(value/10);
-                    } else if (key == "minSoc") {
-                      id(${id}_minSoc).publish_state(value/10);
-                    } else if (key == "buzzerSwitch") {
-                      id(${id}_buzzerSwitch).publish_state(!!value);
-                    } else if (key == "masterSwitch") {
-                      id(${id}_masterSwitch).publish_state(!!value);
-                    } else if (key == "packState") {
-                      if (value == 0) {
-                        id(${id}_packState).publish_state("Idle");
-                      } else if (value == 1) {
-                        id(${id}_packState).publish_state("Charging");
-                      } else {
-                        id(${id}_packState).publish_state("Discharging");
-                      }
-                    } else if (key == "wifiState") {
-                      id(${id}_wifiState).publish_state(value == 0 ? false : true);
-                    } else if (key == "autoRecover") {
-                      id(${id}_autoRecover).publish_state(!!value);
-                    } else if (key == "passMode") {
-                      if (value == 0) {
-                        id(${id}_passMode).publish_state("Auto");
-                      } else if (value == 1) {
-                        id(${id}_passMode).publish_state("Always-Off");
-                      } else {
-                        id(${id}_passMode).publish_state("Always-On");
-                      }
-                    } else if (key == "hubState") {
-                      if (value == 0) {
-                        id(${id}_hubState).publish_state("Standby");
-                      } else {
-                        id(${id}_hubState).publish_state("Shut Down");
-                      }
-                    } else if (key == "inverseMaxPower") {
-                      id(${id}_inverseMaxPower).publish_state(value);
-                    } else {
-                      ESP_LOGD("${id}", "Device sensor '%s' is not setup", key.c_str());
-                    }
-                  }
-
-                  return true;
-                }
-              }
-
-              return false;
+              return true;
             });
   - platform: template
     id: "${id}_packState"

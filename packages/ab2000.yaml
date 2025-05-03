@@ -6,47 +6,34 @@ defaults:
 
 esphome:
   min_version: "2025.4.1"
-  includes:
-    - packages/zendure_version.h
   on_boot:
     - then:
         - lambda: |-
             id(${device_id}_batteries).insert(
               std::make_pair("${serial_number}", [](JsonObject pack) -> void {
-                for (JsonObject::iterator it = pack.begin(); it != pack.end(); ++it) {
-                  std::string key = it->key().c_str();
-                  int value = it->value().as<int>();
+                // Define a map of handlers for each key
+                static const sensor_handler_map_t handlers = {
+                  {"sn", [](int value) { /* ignore */ }},
+                  {"power", [](int value) { id(${device_id}_battery_${serial_number}_power)->publish_state(value); }},
+                  {"minVol", [](int value) { id(${device_id}_battery_${serial_number}_minVol)->publish_state(value / VOLTAGE_SCALE); }},
+                  {"maxVol", [](int value) { id(${device_id}_battery_${serial_number}_maxVol)->publish_state(value / VOLTAGE_SCALE); }},
+                  {"totalVol", [](int value) { id(${device_id}_battery_${serial_number}_totalVol)->publish_state(value / VOLTAGE_SCALE); }},
+                  {"soh", [](int value) { id(${device_id}_battery_${serial_number}_soh)->publish_state(value / PERCENT_SCALE); }},
+                  {"socLevel", [](int value) { id(${device_id}_battery_${serial_number}_socLevel)->publish_state(value); }},
+                  {"softVersion", [](int value) { id(${device_id}_battery_${serial_number}_softVersion)->publish_state(decode_version(value)); }},
+                  {"maxTemp", [](int value) { id(${device_id}_battery_${serial_number}_maxTemp)->publish_state((value / TEMPERATURE_SCALE) - TEMPERATURE_OFFSET); }},
+                  {"state", [](int value) {
+                    const char* state = (value == 0) ? "Idle" : (value == 1) ? "Charging" : "Discharging";
+                    id(${device_id}_battery_${serial_number}_state)->publish_state(state);
+                  }}
+                };
 
-                  if (key == "power") {
-                    id(${device_id}_battery_${serial_number}_power)->publish_state(value);
-                  } else if (key == "minVol") {
-                    id(${device_id}_battery_${serial_number}_minVol)->publish_state(value/100.0f);
-                  } else if (key == "maxVol") {
-                    id(${device_id}_battery_${serial_number}_maxVol)->publish_state(value/100.0f);
-                  } else if (key == "totalVol") {
-                    id(${device_id}_battery_${serial_number}_totalVol)->publish_state(value/100.0f);
-                  } else if (key == "soh") {
-                    id(${device_id}_battery_${serial_number}_soh)->publish_state(value/10.0f);
-                  } else if (key == "socLevel") {
-                    id(${device_id}_battery_${serial_number}_socLevel)->publish_state(value);
-                  } else if (key == "softVersion") {
-                    id(${device_id}_battery_${serial_number}_softVersion)->publish_state(zendure::version::decode_version(value));
-                  } else if (key == "maxTemp") {
-                    id(${device_id}_battery_${serial_number}_maxTemp)->publish_state((value/10.0f) - 273.15f);
-                  } else if (key == "state") {
-                      if (value == 0) {
-                        id(${device_id}_battery_${serial_number}_state).publish_state("Idle");
-                      } else if (value == 1) {
-                        id(${device_id}_battery_${serial_number}_state).publish_state("Charging");
-                      } else {
-                        id(${device_id}_battery_${serial_number}_state).publish_state("Discharging");
-                      }
-                  } else if (key != "sn") {
-                    ESP_LOGD("${device_id}", "packData sensor '%s' is not setup", key.c_str());
-                  }
-                }
+                handle_sensor_object(pack, handlers, "${device_id}");
               })
             );
+
+json:
+zendure:
 
 sensor:
   - platform: template
