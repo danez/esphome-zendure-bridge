@@ -26,7 +26,7 @@ namespace esphome {
 
         void publish_state_if_changed(
             esphome::sensor::Sensor* sensor,
-            int value
+            float value
         ) {
             if (sensor == nullptr) return;
             // We only report 2 or 3 decimal places, so we need to check if the value is close enough
@@ -36,7 +36,7 @@ namespace esphome {
 
         void publish_state_if_changed(
             esphome::number::Number* sensor,
-            int value
+            float value
         ) {
             if (sensor == nullptr) return;
             // We only report 2 or 3 decimal places, so we need to check if the value is close enough

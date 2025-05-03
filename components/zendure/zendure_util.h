@@ -21,11 +21,11 @@ namespace esphome {
 
         void publish_state_if_changed(
             esphome::sensor::Sensor* sensor,
-            int value
+            float value
         );
         void publish_state_if_changed(
             esphome::number::Number* sensor,
-            int value
+            float value
         );
         void publish_state_if_changed(
             esphome::text_sensor::TextSensor* sensor,
