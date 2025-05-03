@@ -6,6 +6,11 @@ A lightweight ESPHome-based Bluetooth bridge for controlling Zendure devices loc
 
 - Hub 1200
 - Hub 2000
+- AB1000
+- AB1000S
+- AB2000
+- AB2000S
+- AB2000X
 
 ## Setup
 
