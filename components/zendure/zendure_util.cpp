@@ -1,5 +1,6 @@
 #include "esphome/components/json/json_util.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
+#include "esphome/components/number/number.h"
 #include "esphome/components/select/select.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/switch/switch.h"
@@ -25,6 +26,16 @@ namespace esphome {
 
         void publish_state_if_changed(
             esphome::sensor::Sensor* sensor,
+            int value
+        ) {
+            if (sensor == nullptr) return;
+            // We only report 2 or 3 decimal places, so we need to check if the value is close enough
+            if (fabs(sensor->state - value) < 0.0001) return;
+            sensor->publish_state(value);
+        }
+
+        void publish_state_if_changed(
+            esphome::number::Number* sensor,
             int value
         ) {
             if (sensor == nullptr) return;
