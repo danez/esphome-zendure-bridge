@@ -8,7 +8,7 @@ defaults:
 external_components:
   # We use a fixed commit hash to ensure compatibility with the current version of the Zendure bridge.
   # When changing the component, make sure to update the commit hash here.
-  - source: github://danez/esphome-zendure-bridge@09007ef
+  - source: github://danez/esphome-zendure-bridge@1.0.0
     components: [ zendure ]
 
 esphome:
