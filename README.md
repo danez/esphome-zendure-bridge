@@ -20,8 +20,7 @@ A lightweight ESPHome-based Bluetooth bridge for controlling Zendure devices loc
 
   1. Find the MAC address of your Zendure device(s). (see under Guides below)
   2. Find the serial numbers of your batteries.
-  3. Create a main esphome configuration similar to one of the files in examples/
-     Refer to https://esphome.io/guides/getting_started_hassio to see how to get started
+  3. Create a main esphome configuration similar to one of the files in `examples/`. Refer to [Home Assistant Documentation](https://esphome.io/guides/getting_started_hassio) to see how to get started
   4. Configure the Zendure package correctly in your esphome yaml file
 ```yaml
 time:
@@ -96,17 +95,17 @@ esp32_ble_tracker:
 
 Once you have the MAC address, copy it — you'll need it in the main `esphome-zendure-bridge` config!
 
-## Troubleshooting
+## Development
 
-### Adding a New Device to the Zendure Bridge
+### Adding a New Device to this project
 
-If you want to help adding support for other Zendure devices, follow these steps to gather the necessary information. I do not have all the devices, so these logs help a lot when adding support for them.
+If you'd like to help adding support for other Zendure devices, please follow these steps to gather the necessary information. I do not have all the devices, so these logs help a lot when adding support for them.
 
 #### Steps to Add a New Device:
 
 1. Adjust the Configuration:
     - Use the `debug/devicescanner.yaml` file to create a BLE scanner that logs all communication from the device.
-    - First update the `debug/devicescanner.yaml` file with your WiFi credentials, the MAC address of the Zendure Device and the config for your ESP32 board:
+    - First, update the `debug/devicescanner.yaml` file with your WiFi credentials, the MAC address of the Zendure Device, and the config for your ESP32 board:
 ```yaml
 substitutions:
   mac_address: "XX:XX:XX:XX:XX:XX" # Replace with your device's MAC address
@@ -118,12 +117,12 @@ substitutions:
 ```
 2. Flash the ESP32:
     - Connect your ESP32 to your computer via USB.
-    - Run the following command to flash the devicescanner.yaml configuration:
+    - Run the following command to flash the `debug/devicescanner.yaml` configuration:
 ```cli
 esphome run debug/devicescanner.yaml
 ```
 
-3. Ensure Zendure Device is on
+3. Ensure the Zendure Device is on
 
 4. Monitor the Logs:
     - Once the ESP32 is running, you will see a lot of red messages appear similar to this:
@@ -133,4 +132,4 @@ esphome run debug/devicescanner.yaml
 
 5. Let it run for around 1 minute
 
-6. Create new issue with the logs and information about what device it is and how it is setup (batteries, ace, etc.)
+6. Create a new issue with the logs and information about what device it is and how it is setup (batteries, ace, etc.)
