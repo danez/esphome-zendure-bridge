@@ -8,20 +8,21 @@
 #include "esphome/core/log.h"
 #include "zendure_util.h"
 #include <string>
+#include <sstream>
 #include <functional>
 
 namespace esphome {
     namespace zendure {
 
         std::string decode_version(const int encoded) {
-            int major = encoded >> 12;
-            int minor = (encoded >> 6) & 0x3F;
-            int patch = encoded & 0x3F;
+            int major = (encoded & 0xF000) >> 12; // 4 bits for major version
+            int minor = (encoded & 0x0F00) >> 8; // 4 bits for minor version
+            int patch = encoded & 0x00FF; // 8 bits for patch version
 
-            char buffer[10];
-            snprintf(buffer, sizeof(buffer), "%d.%d.%d", major, minor, patch);
+            std::stringstream ss;
+            ss << major << '.' << minor << '.' << patch;
 
-            return std::string(buffer);
+            return ss.str();
         }
 
         void publish_state_if_changed(
