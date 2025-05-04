@@ -1,0 +1,82 @@
+substitutions:
+  mac_address: "XX:XX:XX:XX:XX:XX" # Add your device MAC address here
+  wifi_name: "Your_WiFi_Name" # Add your WiFi name here
+  wifi_password: "Your_WiFi_Password" # Add your WiFi password here
+esp32:
+  board: esp32-s3-devkitm-1 # Change board to your specific ESP32 board
+  flash_size: 4MB # Change flash size if needed
+  framework:
+    type: esp-idf
+
+wifi:
+  ssid: "${wifi_name}"
+  password: "${wifi_password}"
+
+esphome:
+  name: devicescanner
+  friendly_name: Zendure Device Scanner
+
+time:
+  - platform: sntp
+    id: esptime
+    timezone: "UTC"
+    servers:
+      - 0.pool.ntp.org
+      - 1.pool.ntp.org
+      - 2.pool.ntp.org
+
+esp32_ble_tracker:
+
+logger:
+  level: ERROR
+
+ble_client:
+  - mac_address: ${mac_address}
+    id: "zendure_device"
+    on_connect:
+      then:
+        - esp32_ble_tracker.stop_scan:
+        - delay: 2s
+        - wait_until:
+            condition:
+              time.has_time:
+        - ble_client.ble_write:
+            id: "zendure_device"
+            service_uuid: a002
+            characteristic_uuid: c304
+            value: !lambda |-
+              char buffer[65];
+              int timestamp = (int) id(esptime).now().timestamp;
+              snprintf(buffer, sizeof(buffer), "{\"method\":\"getInfo\",\"timestamp\":\"%d\",\"messageId\":\"none\"}", timestamp);
+              std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
+              ESP_LOGD("devicescanner", "Sending Command '%s'", buffer);
+              return value;
+        - ble_client.ble_write:
+            id: "zendure_device"
+            service_uuid: a002
+            characteristic_uuid: c304
+            value: !lambda |-
+              char buffer[86];
+              int timestamp = (int) id(esptime).now().timestamp;
+              snprintf(buffer, sizeof(buffer), "{\"method\":\"read\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"properties\":[\"getAll\"]}", timestamp);
+              std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
+              ESP_LOGD("devicescanner", "Sending Command '%s'", buffer);
+              return value;
+    on_disconnect:
+      then:
+        - esp32_ble_tracker.start_scan:
+            continuous: true
+
+text_sensor:
+  - platform: ble_client
+    id: "zendure_ble_receiver"
+    ble_client_id: "zendure_device"
+    internal: true
+    service_uuid: a002
+    characteristic_uuid: c305
+    notify: true
+    update_interval: never
+    on_notify:
+      then:
+        - lambda: |-
+            ESP_LOGE("devicescanner", "%s", x.c_str());

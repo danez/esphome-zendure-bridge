@@ -95,3 +95,42 @@ esp32_ble_tracker:
 4. Power on your Zendure device and look for its MAC address (e.g., C3:7A:7F:9D:1A:B4) in the logs. Its name will start with `Zen`
 
 Once you have the MAC address, copy it — you'll need it in the main `esphome-zendure-bridge` config!
+
+## Troubleshooting
+
+### Adding a New Device to the Zendure Bridge
+
+If you want to help adding support for other Zendure devices, follow these steps to gather the necessary information. I do not have all the devices, so these logs help a lot when adding support for them.
+
+#### Steps to Add a New Device:
+
+1. Flash the Device Scanner Configuration:
+    - Use the `devicescanner.yaml` file to create a BLE scanner that logs all communication from the new device.
+    - Update the `devicescanner.yaml` file with your WiFi credentials, the MAC address of the Zendure Device and the config for your ESP32 board:
+```yaml
+substitutions:
+  mac_address: "XX:XX:XX:XX:XX:XX" # Replace with your device's MAC address
+  wifi_name: "Your_WiFi_Name"      # Replace with your WiFi name
+  wifi_password: "Your_WiFi_Password" # Replace with your WiFi password
+  esp32:
+    board: esp32-s3-devkitm-1 # Change board to your specific ESP32 board
+    flash_size: 4MB # Change flash size if needed
+```
+2. Flash the ESP32:
+    - Connect your ESP32 to your computer via USB.
+    - Run the following command to flash the devicescanner.yaml configuration:
+```cli
+esphome run debug/devicescanner.yaml
+```
+
+3. Ensure Zendure Device is on
+
+4. Monitor the Logs:
+    - Once the ESP32 is running, you will see a lot of red messages appear similar to this:
+```re
+[20:04:12][E][devicescanner:083]: {"method":"report","deviceId":"1hhHFUB6","properties":{"remainOutTime":91}}
+```
+
+5. Let it run for around 1 minute
+
+6. Create new issue with the logs and what device it is and how it is setup (batteries, ace, etc.)
