@@ -133,4 +133,4 @@ esphome run debug/devicescanner.yaml
 
 5. Let it run for around 1 minute
 
-6. Create new issue with the logs and what device it is and how it is setup (batteries, ace, etc.)
+6. Create new issue with the logs and information about what device it is and how it is setup (batteries, ace, etc.)
