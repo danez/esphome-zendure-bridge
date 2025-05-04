@@ -104,9 +104,9 @@ If you want to help adding support for other Zendure devices, follow these steps
 
 #### Steps to Add a New Device:
 
-1. Flash the Device Scanner Configuration:
-    - Use the `devicescanner.yaml` file to create a BLE scanner that logs all communication from the new device.
-    - Update the `devicescanner.yaml` file with your WiFi credentials, the MAC address of the Zendure Device and the config for your ESP32 board:
+1. Adjust the Configuration:
+    - Use the `debug/devicescanner.yaml` file to create a BLE scanner that logs all communication from the device.
+    - First update the `debug/devicescanner.yaml` file with your WiFi credentials, the MAC address of the Zendure Device and the config for your ESP32 board:
 ```yaml
 substitutions:
   mac_address: "XX:XX:XX:XX:XX:XX" # Replace with your device's MAC address
