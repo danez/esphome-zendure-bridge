@@ -93,7 +93,7 @@ text_sensor:
               {"remainOutTime", [](int value) { publish_state_if_changed(id(${id}_remainOutTime), value / TIME_HOURS_SCALE); }},
               {"remainInputTime", [](int value) { publish_state_if_changed(id(${id}_remainInputTime), value / TIME_HOURS_SCALE); }},
               {"masterSoftVersion", [](int value) { publish_state_if_changed(id(${id}_masterSoftVersion), decode_version(value)); }},
-              {"pass", [](int value) { publish_state_if_changed(id(${id}_pass), value == 0 ? false : true); }},
+              {"pass", [](int value) { publish_state_if_changed(id(${id}_pass), !!value); }},
               {"outputLimit", [](int value) { publish_state_if_changed(id(${id}_outputLimit), value); }},
               {"socSet", [](int value) { publish_state_if_changed(id(${id}_socSet), value / PERCENT_SCALE); }},
               {"minSoc", [](int value) { publish_state_if_changed(id(${id}_minSoc), value / PERCENT_SCALE); }},
@@ -103,7 +103,7 @@ text_sensor:
                 const char* state = (value == 0) ? "Idle" : (value == 1) ? "Charging" : "Discharging";
                 publish_state_if_changed(id(${id}_packState), state);
               }},
-              {"wifiState", [](int value) { publish_state_if_changed(id(${id}_wifiState), value == 0 ? false : true); }},
+              {"wifiState", [](int value) { publish_state_if_changed(id(${id}_wifiState), !!value); }},
               {"autoRecover", [](int value) { publish_state_if_changed(id(${id}_autoRecover), !!value); }},
               {"passMode", [](int value) {
                 const char* mode = (value == 0) ? "Auto" : (value == 1) ? "Always-Off" : "Always-On";
@@ -229,6 +229,9 @@ binary_sensor:
     icon: "mdi:wifi"
     entity_category: diagnostic
     disabled_by_default: true
+  - platform: template
+    id: "${id}_masterSwitch"
+    name: "${name} Master Switch"
 
 select:
   - platform: template
@@ -298,27 +301,6 @@ switch:
           time_id: "${time_id}"
           device_id: "${id}"
           key: buzzerSwitch
-          value: 0
-  - platform: template
-    name: "${name} Master Switch"
-    id: "${id}_masterSwitch"
-    optimistic: true
-    icon: "mdi:power"
-    turn_on_action:
-      - !include
-        file: includes/ble-set-property-value.yaml
-        vars:
-          time_id: "${time_id}"
-          device_id: "${id}"
-          key: masterSwitch
-          value: 1
-    turn_off_action:
-      - !include
-        file: includes/ble-set-property-value.yaml
-        vars:
-          time_id: "${time_id}"
-          device_id: "${id}"
-          key: masterSwitch
           value: 0
   - platform: template
     name: "${name} Auto Recover"
