@@ -281,6 +281,12 @@ select:
             return value;
 
 switch:
+  - platform: ble_client
+    ble_client_id: "zendure_ble_${id}"
+    icon: "mdi:bluetooth"
+    entity_category: config
+    restore_mode: DISABLED
+    name: "${name} Bluetooth"
   - platform: template
     name: "${name} Buzzer Switch"
     id: "${id}_buzzerSwitch"
