@@ -113,6 +113,10 @@ text_sensor:
                 const char* state = (value == 0) ? "Standby" : "Shut Down";
                 publish_state_if_changed(id(${id}_hubState), state);
               }},
+              {"pvBrand", [](int value) {
+                const char* brand = (value == 0) ? "Other" : (value == 1) ? "Hoymiles" : (value == 2) ? "Enphase" : (value == 3) ? "APsystems" : (value == 4) ? "Anker" : (value == 5) ? "Deye" : (value == 6) ? "BossWerk" : "TSUN";
+                publish_state_if_changed(id(${id}_pvBrand), brand);
+              }},
               {"inverseMaxPower", [](int value) { publish_state_if_changed(id(${id}_inverseMaxPower), value); }}
             };
 
@@ -234,6 +238,34 @@ binary_sensor:
     name: "${name} Master Switch"
 
 select:
+  - platform: template
+    name: "${name} PV Brand"
+    id: "${id}_pvBrand"
+    icon: "mdi:cog"
+    options:
+      - "Other"
+      - "Hoymiles"
+      - "Enphase"
+      - "APsystems"
+      - "Anker"
+      - "Deye"
+      - "BossWerk"
+      - "TSUN"
+    optimistic: true
+    restore_value: true
+    set_action:
+      - ble_client.ble_write:
+          id: "zendure_ble_${id}"
+          service_uuid: a002
+          characteristic_uuid: c304
+          value: !lambda |-
+            char buffer[120];
+            int timestamp = (int) id(${time_id}).now().timestamp;
+            int propValue = x == "Other" ? 0 : (x == "Hoymiles" ? 1 : (x == "Enphase" ? 2 : (x == "APsystems" ? 3 : (x == "Anker" ? 4 : (x == "Deye" ? 5 : (x == "BossWerk" ? 6 : 7))))));
+            snprintf(buffer, sizeof(buffer), "{\"method\":\"write\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"deviceId\":\"%s\",\"properties\":{\"pvBrand\":%d}}", timestamp, id(${id}_device_id).c_str(), propValue);
+            std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
+            ESP_LOGD("${id}", "Sending Command '%s'", buffer);
+            return value;
   - platform: template
     name: "${name} Hub State"
     id: "${id}_hubState"
