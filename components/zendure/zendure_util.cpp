@@ -86,7 +86,7 @@ namespace esphome {
             std::string& global_device_id,
             const std::string& device_id
         ) {
-            if (global_device_id.empty() && root.containsKey("deviceId")) {
+            if (global_device_id.empty() && root["deviceId"].is<std::string>()) {
                 global_device_id = root["deviceId"].as<std::string>();
                 ESP_LOGI(device_id.c_str(), "Found device ID: %s", global_device_id.c_str());
             }
