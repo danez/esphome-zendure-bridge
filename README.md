@@ -2,7 +2,7 @@
 
 A lightweight ESPHome-based Bluetooth bridge for controlling Zendure devices locally with Home Assistant — no cloud required. This project enables secure, low-latency communication between your Zendure device and Home Assistant using ESPHome and a compatible ESP device, bypassing the Zendure cloud and improving privacy, speed, and reliability.
 
-![zendure-bridge-esphome](https://github.com/user-attachments/assets/81600a2d-d515-4b36-9899-149ddc910802)
+![zendure-bridge-esphome](https://github.com/user-attachments/assets/dca6f797-06ad-4d3e-9a20-e93697b59eb2)
 
 ## Supported Zendure Devices
 
