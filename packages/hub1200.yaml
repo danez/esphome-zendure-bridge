@@ -3,6 +3,7 @@ defaults:
   name: "Hub1200"
   id: "hub_1200"
   watt_limit: "800"
+  esphome_device_id: ""
   # mac_address: ""
 
 external_components:
@@ -12,7 +13,7 @@ external_components:
     components: [ zendure ]
 
 esphome:
-  min_version: "2025.4.1"
+  min_version: "2025.8.0"
 
 json:
 
@@ -135,11 +136,13 @@ text_sensor:
     id: "${id}_packState"
     name: "${name} Pack State"
     icon: "mdi:battery-charging"
+    device_id: "${esphome_device_id}"
   - platform: template
     name: "${name} Master Soft Version"
     entity_category: diagnostic
     disabled_by_default: true
     id: "${id}_masterSoftVersion"
+    device_id: "${esphome_device_id}"
 
 sensor:
   - platform: ble_client
@@ -149,6 +152,7 @@ sensor:
     name: "${name} RSSI"
     entity_category: diagnostic
     disabled_by_default: true
+    device_id: "${esphome_device_id}"
   - platform: template
     name: "${name} Output Home Power"
     device_class: power
@@ -156,6 +160,7 @@ sensor:
     unit_of_measurement: "W"
     accuracy_decimals: 0
     id: "${id}_outputHomePower"
+    device_id: "${esphome_device_id}"
   - platform: template
     name: "${name} Solar Power 1"
     icon: "mdi:solar-power"
@@ -164,6 +169,7 @@ sensor:
     unit_of_measurement: "W"
     accuracy_decimals: 0
     id: "${id}_solarPower1"
+    device_id: "${esphome_device_id}"
   - platform: template
     name: "${name} Solar Power 2"
     icon: "mdi:solar-power"
@@ -172,6 +178,7 @@ sensor:
     unit_of_measurement: "W"
     accuracy_decimals: 0
     id: "${id}_solarPower2"
+    device_id: "${esphome_device_id}"
   - platform: template
     name: "${name} Solar Input Power"
     icon: "mdi:solar-power"
@@ -180,6 +187,7 @@ sensor:
     unit_of_measurement: "W"
     accuracy_decimals: 0
     id: "${id}_solarInputPower"
+    device_id: "${esphome_device_id}"
   - platform: template
     name: "${name} Output Pack Power"
     device_class: power
@@ -187,6 +195,7 @@ sensor:
     unit_of_measurement: "W"
     accuracy_decimals: 0
     id: "${id}_outputPackPower"
+    device_id: "${esphome_device_id}"
   - platform: template
     name: "${name} Electricity Level"
     device_class: battery
@@ -194,6 +203,7 @@ sensor:
     unit_of_measurement: "%"
     accuracy_decimals: 0
     id: "${id}_electricLevel"
+    device_id: "${esphome_device_id}"
   - platform: template
     name: "${name} Pack Input Power"
     device_class: power
@@ -201,6 +211,7 @@ sensor:
     unit_of_measurement: "W"
     accuracy_decimals: 0
     id: "${id}_packInputPower"
+    device_id: "${esphome_device_id}"
   - platform: template
     name: "${name} Remain Out Time"
     device_class: duration
@@ -208,6 +219,7 @@ sensor:
     unit_of_measurement: "h"
     accuracy_decimals: 2
     id: "${id}_remainOutTime"
+    device_id: "${esphome_device_id}"
   - platform: template
     name: "${name} Remain Input Time"
     device_class: duration
@@ -215,17 +227,20 @@ sensor:
     unit_of_measurement: "h"
     accuracy_decimals: 2
     id: "${id}_remainInputTime"
+    device_id: "${esphome_device_id}"
   - platform: template
     name: "${name} Pack Num"
     entity_category: diagnostic
     disabled_by_default: true
     accuracy_decimals: 0
     id: "${id}_packNum"
+    device_id: "${esphome_device_id}"
 
 binary_sensor:
   - platform: template
     name: "${name} Pass"
     id: "${id}_pass"
+    device_id: "${esphome_device_id}"
   - platform: template
     id: "${id}_wifiState"
     name: "${name} Wifi State"
@@ -233,9 +248,11 @@ binary_sensor:
     icon: "mdi:wifi"
     entity_category: diagnostic
     disabled_by_default: true
+    device_id: "${esphome_device_id}"
   - platform: template
     id: "${id}_masterSwitch"
     name: "${name} Master Switch"
+    device_id: "${esphome_device_id}"
 
 select:
   - platform: template
@@ -253,6 +270,7 @@ select:
       - "TSUN"
     optimistic: true
     restore_value: true
+    device_id: "${esphome_device_id}"
     set_action:
       - ble_client.ble_write:
           id: "zendure_ble_${id}"
@@ -275,6 +293,7 @@ select:
       - "Shut Down"
     optimistic: true
     restore_value: true
+    device_id: "${esphome_device_id}"
     set_action:
       - ble_client.ble_write:
           id: "zendure_ble_${id}"
@@ -298,6 +317,7 @@ select:
       - "Always-On"
     optimistic: true
     restore_value: true
+    device_id: "${esphome_device_id}"
     set_action:
       - ble_client.ble_write:
           id: "zendure_ble_${id}"
@@ -319,11 +339,13 @@ switch:
     entity_category: config
     restore_mode: DISABLED
     name: "${name} Bluetooth"
+    device_id: "${esphome_device_id}"
   - platform: template
     name: "${name} Buzzer Switch"
     id: "${id}_buzzerSwitch"
     optimistic: true
     icon: "mdi:volume-high"
+    device_id: "${esphome_device_id}"
     turn_on_action:
       - !include
         file: includes/ble-set-property-value.yaml
@@ -345,6 +367,7 @@ switch:
     id: "${id}_autoRecover"
     optimistic: true
     icon: "mdi:restore"
+    device_id: "${esphome_device_id}"
     turn_on_action:
       - !include
         file: includes/ble-set-property-value.yaml
@@ -373,6 +396,7 @@ number:
     max_value: ${watt_limit}
     step: 1
     optimistic: true
+    device_id: "${esphome_device_id}"
     set_action:
       - !include
         file: includes/ble-set-property.yaml
@@ -391,6 +415,7 @@ number:
     max_value: 100
     step: 1
     optimistic: true
+    device_id: "${esphome_device_id}"
     set_action:
       - !include
         file: includes/ble-set-property.yaml
@@ -409,6 +434,7 @@ number:
     max_value: 100
     step: 1
     optimistic: true
+    device_id: "${esphome_device_id}"
     set_action:
       - !include
         file: includes/ble-set-property.yaml
@@ -428,6 +454,7 @@ number:
     step: 1
     icon: "mdi:power-plug"
     optimistic: true
+    device_id: "${esphome_device_id}"
     set_action:
       - !include
         file: includes/ble-set-property.yaml

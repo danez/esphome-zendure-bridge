@@ -1,4 +1,5 @@
-# defaults:
+defaults:
+  esphome_device_id: ""
   # name: ""
   # device_id: ""
   # serial_number: ""
@@ -10,7 +11,7 @@ external_components:
     components: [ zendure ]
 
 esphome:
-  min_version: "2025.4.1"
+  min_version: "2025.8.0"
   on_boot:
     - then:
         - lambda: |-
@@ -48,6 +49,7 @@ sensor:
     state_class: measurement
     unit_of_measurement: "W"
     accuracy_decimals: 0
+    device_id: "${esphome_device_id}"
   - platform: template
     id: "${device_id}_battery_${serial_number}_minVol"
     name: "${name} Min Vol"
@@ -55,6 +57,7 @@ sensor:
     state_class: measurement
     unit_of_measurement: "V"
     accuracy_decimals: 2
+    device_id: "${esphome_device_id}"
   - platform: template
     id: "${device_id}_battery_${serial_number}_maxVol"
     name: "${name} Max Vol"
@@ -62,6 +65,7 @@ sensor:
     state_class: measurement
     unit_of_measurement: "V"
     accuracy_decimals: 2
+    device_id: "${esphome_device_id}"
   - platform: template
     id: "${device_id}_battery_${serial_number}_totalVol"
     name: "${name} Total Vol"
@@ -69,6 +73,7 @@ sensor:
     state_class: measurement
     unit_of_measurement: "V"
     accuracy_decimals: 2
+    device_id: "${esphome_device_id}"
   - platform: template
     id: "${device_id}_battery_${serial_number}_soh"
     name: "${name} SoH"
@@ -78,6 +83,7 @@ sensor:
     accuracy_decimals: 1
     entity_category: diagnostic
     disabled_by_default: true
+    device_id: "${esphome_device_id}"
   - platform: template
     id: "${device_id}_battery_${serial_number}_socLevel"
     name: "${name} SoC Level"
@@ -85,6 +91,7 @@ sensor:
     state_class: measurement
     unit_of_measurement: "%"
     accuracy_decimals: 0
+    device_id: "${esphome_device_id}"
   - platform: template
     id: "${device_id}_battery_${serial_number}_maxTemp"
     name: "${name} Max Temp"
@@ -94,6 +101,7 @@ sensor:
     accuracy_decimals: 2
     entity_category: diagnostic
     disabled_by_default: true
+    device_id: "${esphome_device_id}"
 
 text_sensor:
   - platform: template
@@ -101,7 +109,9 @@ text_sensor:
     name: "${name} Soft Version"
     entity_category: diagnostic
     disabled_by_default: true
+    device_id: "${esphome_device_id}"
   - platform: template
     id: "${device_id}_battery_${serial_number}_state"
     name: "${name} State"
     icon: "mdi:battery-charging"
+    device_id: "${esphome_device_id}"
