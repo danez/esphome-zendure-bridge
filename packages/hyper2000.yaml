@@ -1,8 +1,9 @@
 defaults:
   time_id: "zenduretime"
-  name: "Hub2000"
-  id: "hub_2000"
-  watt_limit: "800"
+  name: "Hyper2000"
+  id: "hyper_2000"
+  output_watt_limit: "1200"
+  input_watt_limit: "1200"
   esphome_device_id: ""
   # mac_address: ""
 
@@ -84,6 +85,7 @@ text_sensor:
         - lambda: |-
             static const sensor_handler_map_t property_handlers = {
               {"outputHomePower", [](int value) { publish_state_if_changed(id(${id}_outputHomePower), value); }},
+              {"gridInputPower", [](int value) { publish_state_if_changed(id(${id}_gridInputPower), value); }},
               {"solarPower1", [](int value) { publish_state_if_changed(id(${id}_solarPower1), value); }},
               {"solarPower2", [](int value) { publish_state_if_changed(id(${id}_solarPower2), value); }},
               {"solarInputPower", [](int value) { publish_state_if_changed(id(${id}_solarInputPower), value); }},
@@ -94,12 +96,18 @@ text_sensor:
               {"remainOutTime", [](int value) { publish_state_if_changed(id(${id}_remainOutTime), value / TIME_HOURS_SCALE); }},
               {"remainInputTime", [](int value) { publish_state_if_changed(id(${id}_remainInputTime), value / TIME_HOURS_SCALE); }},
               {"masterSoftVersion", [](int value) { publish_state_if_changed(id(${id}_masterSoftVersion), decode_version(value)); }},
+              {"hyperTmp", [](int value) { publish_state_if_changed(id(${id}_hyperTmp), (value / TEMPERATURE_SCALE) - TEMPERATURE_OFFSET); }},
               {"pass", [](int value) { publish_state_if_changed(id(${id}_pass), !!value); }},
               {"outputLimit", [](int value) { publish_state_if_changed(id(${id}_outputLimit), value); }},
+              {"inputLimit", [](int value) { publish_state_if_changed(id(${id}_inputLimit), value); }},
               {"socSet", [](int value) { publish_state_if_changed(id(${id}_socSet), value / PERCENT_SCALE); }},
               {"minSoc", [](int value) { publish_state_if_changed(id(${id}_minSoc), value / PERCENT_SCALE); }},
-              {"buzzerSwitch", [](int value) { publish_state_if_changed(id(${id}_buzzerSwitch), !!value); }},
+              {"lampSwitch", [](int value) { publish_state_if_changed(id(${id}_buzzerSwitch), !!value); }},
               {"masterSwitch", [](int value) { publish_state_if_changed(id(${id}_masterSwitch), !!value); }},
+              {"acMode", [](int value) {
+                const char* mode = (value == 1) ? "input" : "output";
+                publish_state_if_changed(id(${id}_acMode), mode);
+              }},
               {"packState", [](int value) {
                 const char* state = (value == 0) ? "Idle" : (value == 1) ? "Charging" : "Discharging";
                 publish_state_if_changed(id(${id}_packState), state);
@@ -160,6 +168,14 @@ sensor:
     unit_of_measurement: "W"
     accuracy_decimals: 0
     id: "${id}_outputHomePower"
+    device_id: "${esphome_device_id}"
+  - platform: template
+    name: "${name} Grid Input Power"
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: "W"
+    accuracy_decimals: 0
+    id: "${id}_gridInputPower"
     device_id: "${esphome_device_id}"
   - platform: template
     name: "${name} Solar Power 1"
@@ -235,6 +251,16 @@ sensor:
     accuracy_decimals: 0
     id: "${id}_packNum"
     device_id: "${esphome_device_id}"
+  - platform: template
+    id: "${id}_hyperTmp"
+    name: "${name} Hyper Temp"
+    device_class: temperature
+    state_class: measurement
+    unit_of_measurement: "°C"
+    accuracy_decimals: 2
+    entity_category: diagnostic
+    disabled_by_default: true
+    device_id: "${esphome_device_id}"
 
 binary_sensor:
   - platform: template
@@ -255,6 +281,29 @@ binary_sensor:
     device_id: "${esphome_device_id}"
 
 select:
+  - platform: template
+    name: "${name} AC Mode"
+    id: "${id}_acMode"
+    icon: "mdi:current-ac"
+    options:
+      - "input"
+      - "output"
+    optimistic: true
+    restore_value: true
+    device_id: "${esphome_device_id}"
+    set_action:
+      - ble_client.ble_write:
+          id: "zendure_ble_${id}"
+          service_uuid: a002
+          characteristic_uuid: c304
+          value: !lambda |-
+            char buffer[120];
+            int timestamp = (int) id(${time_id}).now().timestamp;
+            int propValue = x == "input" ? 1 : 2;
+            snprintf(buffer, sizeof(buffer), "{\"method\":\"write\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"deviceId\":\"%s\",\"properties\":{\"acMode\":%d}}", timestamp, id(${id}_device_id).c_str(), propValue);
+            std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
+            ESP_LOGD("${id}", "Sending Command '%s'", buffer);
+            return value;
   - platform: template
     name: "${name} PV Brand"
     id: "${id}_pvBrand"
@@ -341,10 +390,10 @@ switch:
     name: "${name} Bluetooth"
     device_id: "${esphome_device_id}"
   - platform: template
-    name: "${name} Buzzer Switch"
-    id: "${id}_buzzerSwitch"
+    name: "${name} Lamp Switch"
+    id: "${id}_lampSwitch"
     optimistic: true
-    icon: "mdi:volume-high"
+    icon: "mdi:led-on"
     device_id: "${esphome_device_id}"
     turn_on_action:
       - !include
@@ -352,7 +401,7 @@ switch:
         vars:
           time_id: "${time_id}"
           device_id: "${id}"
-          key: buzzerSwitch
+          key: lampSwitch
           value: 1
     turn_off_action:
       - !include
@@ -360,7 +409,7 @@ switch:
         vars:
           time_id: "${time_id}"
           device_id: "${id}"
-          key: buzzerSwitch
+          key: lampSwitch
           value: 0
   - platform: template
     name: "${name} Auto Recover"
@@ -393,7 +442,7 @@ number:
     id: "${id}_outputLimit"
     unit_of_measurement: W
     min_value: 0
-    max_value: ${watt_limit}
+    max_value: ${output_watt_limit}
     step: 1
     optimistic: true
     device_id: "${esphome_device_id}"
@@ -404,6 +453,25 @@ number:
           time_id: "${time_id}"
           device_id: "${id}"
           key: outputLimit
+          append_value: ""
+  - platform: template
+    name: "${name} Input Limit"
+    device_class: power
+    mode: slider
+    id: "${id}_inputLimit"
+    unit_of_measurement: W
+    min_value: 0
+    max_value: ${input_watt_limit}
+    step: 1
+    optimistic: true
+    device_id: "${esphome_device_id}"
+    set_action:
+      - !include
+        file: includes/ble-set-property.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: inputLimit
           append_value: ""
   - platform: template
     name: "${name} Min Soc"
@@ -450,7 +518,7 @@ number:
     id: "${id}_inverseMaxPower"
     unit_of_measurement: W
     min_value: 0
-    max_value: ${watt_limit}
+    max_value: ${output_watt_limit}
     step: 1
     icon: "mdi:power-plug"
     optimistic: true
