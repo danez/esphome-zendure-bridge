@@ -1,6 +1,6 @@
 esphome:
   name: esp32s3_example
-  friendly_name: ESP32S3 Zendure Hub 2000 with AB2000 Example
+  friendly_name: ESP32S3 Zendure Hyper 2000 with AB2000 Example
 
 esp32:
   board: esp32-s3-devkitm-1
@@ -28,24 +28,25 @@ packages:
   zendure:
     url: https://github.com/danez/esphome-zendure-bridge
     files:
-      - path: packages/hub2000.yaml
+      - path: packages/hyper2000.yaml
         vars:
           mac_address: 00:00:00:00:00:00
           time_id: esptime
-          name: "Hub 2000"
-          id: "hub_2000"
-          esphome_device_id: "Hub 2000"
-          watt_limit: "800"
+          name: "Hyper 2000"
+          id: "hyper_2000"
+          esphome_device_id: "Hyper 2000"
+          output_watt_limit: "1200"
+          input_watt_limit: "1200"
       - path: packages/ab2000.yaml
         vars:
-          name: "Hub 2000 Battery 1"
-          device_id: "hub_2000"
+          name: "Hyper 2000 Battery 1"
+          device_id: "hyper_2000"
           serial_number: "CO4ABCDEF123456"
           esphome_device_id: "AB2000S Battery 1"
       - path: packages/ab2000.yaml
         vars:
-          name: "Hub 2000 Battery 2"
-          device_id: "hub_2000"
+          name: "Hyper 2000 Battery 2"
+          device_id: "hyper_2000"
           serial_number: "CO4XXXXXX654321"
           esphome_device_id: "AB2000S Battery 2"
     ref: v1
