@@ -68,7 +68,7 @@ namespace esphome {
             const std::string& value
         ) {
             if (sensor == nullptr) return;
-            if (sensor->has_state() && sensor->state == value) return;
+            if (sensor->has_state() && sensor->current_option() == value) return;
             sensor->publish_state(value);
         }
 
