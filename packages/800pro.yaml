@@ -284,7 +284,6 @@ sensor:
     entity_category: diagnostic
     disabled_by_default: true
     device_id: "${esphome_device_id}"
-    
 
 binary_sensor:
   - platform: template
@@ -372,8 +371,6 @@ select:
             std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
             ESP_LOGD("${id}", "Sending Command '%s'", buffer);
             return value;
-
-
 switch:
   - platform: ble_client
     ble_client_id: "zendure_ble_${id}"

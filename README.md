@@ -6,9 +6,15 @@ A lightweight ESPHome-based Bluetooth bridge for controlling Zendure devices loc
 
 ## Supported Zendure Devices
 
+### Controllers
+
 - Hub 1200
 - Hub 2000
 - Hyper 2000 (Experimental)
+- SolarFlow 800 Pro
+
+### Batteries
+
 - AB1000
 - AB1000S
 - AB2000
