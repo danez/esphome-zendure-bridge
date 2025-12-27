@@ -1,0 +1,503 @@
+defaults:
+  time_id: "zenduretime"
+  name: "800Pro"
+  id: "sf_800_pro"
+  output_watt_limit: "800"
+  input_watt_limit: "800"
+  esphome_device_id: ""
+  # mac_address: ""
+
+external_components:
+  # We use a fixed version to ensure compatibility with the current version of the Zendure bridge.
+  # When changing the component, make sure to update the version here.
+  - source: github://danez/esphome-zendure-bridge@1.0.8
+    components: [ zendure ]
+
+esphome:
+  min_version: "2025.11.0"
+
+json:
+
+zendure:
+
+esp32_ble_tracker:
+
+globals:
+  - id: "${id}_device_id"
+    type: std::string
+    restore_value: no
+    initial_value: '""'
+  - id: "${id}_batteries"
+    type: "battery_handler_map_t"
+    restore_value: no
+
+interval:
+  - interval: 1min
+    startup_delay: 75s
+    then:
+      - !include
+        file: includes/ble-get-info.yaml
+        vars:
+          device_id: "${id}"
+          time_id: "${time_id}"
+      - !include
+        file: includes/ble-get-all.yaml
+        vars:
+          device_id: "${id}"
+          time_id: "${time_id}"
+
+ble_client:
+  - mac_address: ${mac_address}
+    id: "zendure_ble_${id}"
+    on_connect:
+      then:
+        - esp32_ble_tracker.stop_scan:
+        - delay: 5s
+        - wait_until:
+            condition:
+              time.has_time:
+        - !include
+          file: includes/ble-get-info.yaml
+          vars:
+            device_id: "${id}"
+            time_id: "${time_id}"
+        - !include
+          file: includes/ble-get-all.yaml
+          vars:
+            device_id: "${id}"
+            time_id: "${time_id}"
+    on_disconnect:
+      then:
+        - esp32_ble_tracker.start_scan:
+            continuous: true
+
+text_sensor:
+  - platform: ble_client
+    id: "zendure_ble_receiver_${id}"
+    ble_client_id: "zendure_ble_${id}"
+    internal: true
+    service_uuid: a002
+    characteristic_uuid: c305
+    notify: true
+    update_interval: never
+    on_notify:
+      then:
+        - lambda: |-
+            static const sensor_handler_map_t property_handlers = {
+              {"outputHomePower", [](int value) { publish_state_if_changed(id(${id}_outputHomePower), value); }},
+              {"gridInputPower", [](int value) { publish_state_if_changed(id(${id}_gridInputPower), value); }},
+              {"solarPower1", [](int value) { publish_state_if_changed(id(${id}_solarPower1), value); }},
+              {"solarPower2", [](int value) { publish_state_if_changed(id(${id}_solarPower2), value); }},
+              {"solarPower3", [](int value) { publish_state_if_changed(id(${id}_solarPower3), value); }},
+              {"solarPower4", [](int value) { publish_state_if_changed(id(${id}_solarPower4), value); }},
+              {"solarInputPower", [](int value) { publish_state_if_changed(id(${id}_solarInputPower), value); }},
+              {"outputPackPower", [](int value) { publish_state_if_changed(id(${id}_outputPackPower), value); }},
+              {"electricLevel", [](int value) { publish_state_if_changed(id(${id}_electricLevel), value); }},
+              {"packInputPower", [](int value) { publish_state_if_changed(id(${id}_packInputPower), value); }},
+              {"packNum", [](int value) { publish_state_if_changed(id(${id}_packNum), value); }},
+              {"remainOutTime", [](int value) { publish_state_if_changed(id(${id}_remainOutTime), value / TIME_HOURS_SCALE); }},
+              {"remainInputTime", [](int value) { publish_state_if_changed(id(${id}_remainInputTime), value / TIME_HOURS_SCALE); }},
+              {"MASTER", [](int value) { publish_state_if_changed(id(${id}_masterSoftVersion), decode_version(value)); }},
+              {"hyperTmp", [](int value) { publish_state_if_changed(id(${id}_hyperTmp), (value / TEMPERATURE_SCALE) - TEMPERATURE_OFFSET); }},
+              {"pass", [](int value) { publish_state_if_changed(id(${id}_pass), !!value); }},
+              {"outputLimit", [](int value) { publish_state_if_changed(id(${id}_outputLimit), value); }},
+              {"inputLimit", [](int value) { publish_state_if_changed(id(${id}_inputLimit), value); }},
+              {"socSet", [](int value) { publish_state_if_changed(id(${id}_socSet), value / PERCENT_SCALE); }},
+              {"minSoc", [](int value) { publish_state_if_changed(id(${id}_minSoc), value / PERCENT_SCALE); }},
+              {"lampSwitch", [](int value) { publish_state_if_changed(id(${id}_lampSwitch), !!value); }},
+              {"acMode", [](int value) {
+                const char* mode = (value == 1) ? "input" : "output";
+                publish_state_if_changed(id(${id}_acMode), mode);
+              }},
+              {"packState", [](int value) {
+                const char* state = (value == 0) ? "Idle" : (value == 1) ? "Charging" : "Discharging";
+                publish_state_if_changed(id(${id}_packState), state);
+              }},
+              {"wifiState", [](int value) { publish_state_if_changed(id(${id}_wifiState), !!value); }},
+              {"passMode", [](int value) {
+                const char* mode = (value == 0) ? "Auto" : (value == 1) ? "Always-Off" : "Always-On";
+                publish_state_if_changed(id(${id}_passMode), mode);
+              }},
+              {"inverseMaxPower", [](int value) { publish_state_if_changed(id(${id}_inverseMaxPower), value); }},
+              {"gridOffMode", [](int value) {
+                const char* mode = (value == 0) ? "On" : (value == 1) ? "Eco" : "Off";
+                publish_state_if_changed(id(${id}_gridOffMode), mode);
+              }},
+              {"gridOffPower", [](int value) { publish_state_if_changed(id(${id}_gridOffPower), value); }},
+            };
+
+            json::parse_json(x, [](JsonObject root) -> bool {
+              handle_device_message(
+                root,
+                property_handlers,
+                id(${id}_batteries),
+                id(${id}_device_id),
+                "${id}"
+              );
+
+              return true;
+            });
+  - platform: template
+    id: "${id}_packState"
+    name: "${name} Pack State"
+    icon: "mdi:battery-charging"
+    device_id: "${esphome_device_id}"
+  - platform: template
+    name: "${name} Master Soft Version"
+    entity_category: diagnostic
+    disabled_by_default: true
+    id: "${id}_masterSoftVersion"
+    device_id: "${esphome_device_id}"
+
+sensor:
+  - platform: ble_client
+    type: rssi
+    ble_client_id: "zendure_ble_${id}"
+    update_interval: 60s
+    name: "${name} RSSI"
+    entity_category: diagnostic
+    disabled_by_default: true
+    device_id: "${esphome_device_id}"
+  - platform: template
+    name: "${name} Output Home Power"
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: "W"
+    accuracy_decimals: 0
+    id: "${id}_outputHomePower"
+    device_id: "${esphome_device_id}"
+  - platform: template
+    name: "${name} Grid Input Power"
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: "W"
+    accuracy_decimals: 0
+    id: "${id}_gridInputPower"
+    device_id: "${esphome_device_id}"
+  - platform: template
+    name: "${name} Off-Grid Output Power"
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: "W"
+    accuracy_decimals: 0
+    id: "${id}_gridOffPower"
+    device_id: "${esphome_device_id}"
+  - platform: template
+    name: "${name} Solar Power 1"
+    icon: "mdi:solar-power"
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: "W"
+    accuracy_decimals: 0
+    id: "${id}_solarPower1"
+    device_id: "${esphome_device_id}"
+  - platform: template
+    name: "${name} Solar Power 2"
+    icon: "mdi:solar-power"
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: "W"
+    accuracy_decimals: 0
+    id: "${id}_solarPower2"
+    device_id: "${esphome_device_id}"
+  - platform: template
+    name: "${name} Solar Power 3"
+    icon: "mdi:solar-power"
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: "W"
+    accuracy_decimals: 0
+    id: "${id}_solarPower3"
+    device_id: "${esphome_device_id}"
+  - platform: template
+    name: "${name} Solar Power 4"
+    icon: "mdi:solar-power"
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: "W"
+    accuracy_decimals: 0
+    id: "${id}_solarPower4"
+    device_id: "${esphome_device_id}"
+  - platform: template
+    name: "${name} Solar Input Power"
+    icon: "mdi:solar-power"
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: "W"
+    accuracy_decimals: 0
+    id: "${id}_solarInputPower"
+    device_id: "${esphome_device_id}"
+  - platform: template
+    name: "${name} Output Pack Power"
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: "W"
+    accuracy_decimals: 0
+    id: "${id}_outputPackPower"
+    device_id: "${esphome_device_id}"
+  - platform: template
+    name: "${name} Electricity Level"
+    device_class: battery
+    state_class: measurement
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    id: "${id}_electricLevel"
+    device_id: "${esphome_device_id}"
+  - platform: template
+    name: "${name} Pack Input Power"
+    device_class: power
+    state_class: measurement
+    unit_of_measurement: "W"
+    accuracy_decimals: 0
+    id: "${id}_packInputPower"
+    device_id: "${esphome_device_id}"
+  - platform: template
+    name: "${name} Remain Out Time"
+    device_class: duration
+    state_class: measurement
+    unit_of_measurement: "h"
+    accuracy_decimals: 2
+    id: "${id}_remainOutTime"
+    device_id: "${esphome_device_id}"
+  - platform: template
+    name: "${name} Remain Input Time"
+    device_class: duration
+    state_class: measurement
+    unit_of_measurement: "h"
+    accuracy_decimals: 2
+    id: "${id}_remainInputTime"
+    device_id: "${esphome_device_id}"
+  - platform: template
+    name: "${name} Pack Num"
+    entity_category: diagnostic
+    disabled_by_default: true
+    accuracy_decimals: 0
+    id: "${id}_packNum"
+    device_id: "${esphome_device_id}"
+  - platform: template
+    id: "${id}_hyperTmp"
+    name: "${name} Hyper Temp"
+    device_class: temperature
+    state_class: measurement
+    unit_of_measurement: "°C"
+    accuracy_decimals: 2
+    entity_category: diagnostic
+    disabled_by_default: true
+    device_id: "${esphome_device_id}"
+    
+
+binary_sensor:
+  - platform: template
+    name: "${name} Pass"
+    id: "${id}_pass"
+    device_id: "${esphome_device_id}"
+  - platform: template
+    id: "${id}_wifiState"
+    name: "${name} Wifi State"
+    device_class: connectivity
+    icon: "mdi:wifi"
+    entity_category: diagnostic
+    disabled_by_default: true
+    device_id: "${esphome_device_id}"
+
+select:
+  - platform: template
+    name: "${name} AC Mode"
+    id: "${id}_acMode"
+    icon: "mdi:current-ac"
+    options:
+      - "input"
+      - "output"
+    optimistic: true
+    restore_value: true
+    device_id: "${esphome_device_id}"
+    set_action:
+      - ble_client.ble_write:
+          id: "zendure_ble_${id}"
+          service_uuid: a002
+          characteristic_uuid: c304
+          value: !lambda |-
+            char buffer[120];
+            int timestamp = (int) id(${time_id}).now().timestamp;
+            int propValue = x == "input" ? 1 : 2;
+            snprintf(buffer, sizeof(buffer), "{\"method\":\"write\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"deviceId\":\"%s\",\"properties\":{\"acMode\":%d}}", timestamp, id(${id}_device_id).c_str(), propValue);
+            std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
+            ESP_LOGD("${id}", "Sending Command '%s'", buffer);
+            return value;
+  - platform: template
+    name: "${name} Pass Mode"
+    id: "${id}_passMode"
+    icon: "mdi:arrow-decision"
+    options:
+      - "Auto"
+      - "Always-Off"
+      - "Always-On"
+    optimistic: true
+    restore_value: true
+    device_id: "${esphome_device_id}"
+    set_action:
+      - ble_client.ble_write:
+          id: "zendure_ble_${id}"
+          service_uuid: a002
+          characteristic_uuid: c304
+          value: !lambda |-
+            char buffer[120];
+            int timestamp = (int) id(${time_id}).now().timestamp;
+            int propValue = x == "Auto" ? 0 : (x == "Always-Off" ? 1 : 2);
+            snprintf(buffer, sizeof(buffer), "{\"method\":\"write\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"deviceId\":\"%s\",\"properties\":{\"passMode\":%d}}", timestamp, id(${id}_device_id).c_str(), propValue);
+            std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
+            ESP_LOGD("${id}", "Sending Command '%s'", buffer);
+            return value;
+  - platform: template
+    name: "${name} Off-Grid Mode"
+    id: "${id}_gridOffMode"
+    icon: "mdi:arrow-decision"
+    options:
+      - "On"
+      - "Eco"
+      - "Off"
+    optimistic: true
+    restore_value: true
+    device_id: "${esphome_device_id}"
+    set_action:
+      - ble_client.ble_write:
+          id: "zendure_ble_${id}"
+          service_uuid: a002
+          characteristic_uuid: c304
+          value: !lambda |-
+            char buffer[120];
+            int timestamp = (int) id(${time_id}).now().timestamp;
+            int propValue = x == "On" ? 0 : (x == "Eco" ? 1 : 2);
+            snprintf(buffer, sizeof(buffer), "{\"method\":\"write\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"deviceId\":\"%s\",\"properties\":{\"gridOffMode\":%d}}", timestamp, id(${id}_device_id).c_str(), propValue);
+            std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
+            ESP_LOGD("${id}", "Sending Command '%s'", buffer);
+            return value;
+
+
+switch:
+  - platform: ble_client
+    ble_client_id: "zendure_ble_${id}"
+    icon: "mdi:bluetooth"
+    entity_category: config
+    restore_mode: DISABLED
+    name: "${name} Bluetooth"
+    device_id: "${esphome_device_id}"
+  - platform: template
+    name: "${name} Lamp Switch"
+    id: "${id}_lampSwitch"
+    optimistic: true
+    icon: "mdi:led-on"
+    device_id: "${esphome_device_id}"
+    turn_on_action:
+      - !include
+        file: includes/ble-set-property-value.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: lampSwitch
+          value: 1
+    turn_off_action:
+      - !include
+        file: includes/ble-set-property-value.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: lampSwitch
+          value: 0
+number:
+  - platform: template
+    name: "${name} Output Limit"
+    device_class: power
+    mode: slider
+    id: "${id}_outputLimit"
+    unit_of_measurement: W
+    min_value: 0
+    max_value: ${output_watt_limit}
+    step: 1
+    optimistic: true
+    device_id: "${esphome_device_id}"
+    set_action:
+      - !include
+        file: includes/ble-set-property.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: outputLimit
+          append_value: ""
+  - platform: template
+    name: "${name} Input Limit"
+    device_class: power
+    mode: slider
+    id: "${id}_inputLimit"
+    unit_of_measurement: W
+    min_value: 0
+    max_value: ${input_watt_limit}
+    step: 1
+    optimistic: true
+    device_id: "${esphome_device_id}"
+    set_action:
+      - !include
+        file: includes/ble-set-property.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: inputLimit
+          append_value: ""
+  - platform: template
+    name: "${name} Min Soc"
+    mode: slider
+    id: "${id}_minSoc"
+    icon: "mdi:battery-arrow-down"
+    unit_of_measurement: "%"
+    min_value: 0
+    max_value: 100
+    step: 1
+    optimistic: true
+    device_id: "${esphome_device_id}"
+    set_action:
+      - !include
+        file: includes/ble-set-property.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: minSoc
+          append_value: 0
+  - platform: template
+    name: "${name} Soc Set"
+    mode: slider
+    id: "${id}_socSet"
+    icon: "mdi:battery-arrow-up"
+    unit_of_measurement: "%"
+    min_value: 0
+    max_value: 100
+    step: 1
+    optimistic: true
+    device_id: "${esphome_device_id}"
+    set_action:
+      - !include
+        file: includes/ble-set-property.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: socSet
+          append_value: 0
+  - platform: template
+    name: "${name} Inverse Max Power"
+    device_class: power
+    mode: slider
+    id: "${id}_inverseMaxPower"
+    unit_of_measurement: W
+    min_value: 0
+    max_value: ${output_watt_limit}
+    step: 1
+    icon: "mdi:power-plug"
+    optimistic: true
+    device_id: "${esphome_device_id}"
+    set_action:
+      - !include
+        file: includes/ble-set-property.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: inverseMaxPower
+          append_value: ""
