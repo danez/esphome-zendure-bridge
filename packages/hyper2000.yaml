@@ -102,7 +102,7 @@ text_sensor:
               {"inputLimit", [](int value) { publish_state_if_changed(id(${id}_inputLimit), value); }},
               {"socSet", [](int value) { publish_state_if_changed(id(${id}_socSet), value / PERCENT_SCALE); }},
               {"minSoc", [](int value) { publish_state_if_changed(id(${id}_minSoc), value / PERCENT_SCALE); }},
-              {"lampSwitch", [](int value) { publish_state_if_changed(id(${id}_buzzerSwitch), !!value); }},
+              {"lampSwitch", [](int value) { publish_state_if_changed(id(${id}_lampSwitch), !!value); }},
               {"masterSwitch", [](int value) { publish_state_if_changed(id(${id}_masterSwitch), !!value); }},
               {"acMode", [](int value) {
                 const char* mode = (value == 1) ? "input" : "output";
