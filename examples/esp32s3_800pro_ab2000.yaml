@@ -1,0 +1,47 @@
+esphome:
+  name: esp32s3_example
+  friendly_name: ESP32S3 Zendure SolarFlow 800 Pro with built-in AB2000 Example
+
+esp32:
+  board: esp32-s3-devkitm-1
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+
+wifi:
+  ssid: WIFI
+  password: PASSWORD
+
+logger:
+  level: INFO
+
+time:
+  - platform: sntp
+    id: esptime
+    timezone: "UTC"
+    servers:
+      - 0.pool.ntp.org
+      - 1.pool.ntp.org
+      - 2.pool.ntp.org
+
+packages:
+  zendure:
+    url: https://github.com/danez/esphome-zendure-bridge
+    files:
+      - path: packages/800pro.yaml
+        vars:
+          mac_address: 00:00:00:00:00:00
+          time_id: esptime
+          name: "SolarFlow 800 Pro"
+          id: "sf_800_pro"
+          esphome_device_id: "800 Pro"
+          output_watt_limit: "800"
+          input_watt_limit: "800"
+      - path: packages/ab2000.yaml
+        vars:
+          name: "SolarFlow 800 Pro - Battery 1"
+          device_id: "sf_800_pro"
+          serial_number: "CO4ABCDEF123456"
+          esphome_device_id: "AB2000S Battery 1"
+    ref: v1
+    refresh: 1d
