@@ -45,7 +45,7 @@ void publish_state_if_changed(esphome::number::Number *sensor, float value) {
 
 void publish_state_if_changed(esphome::text_sensor::TextSensor *sensor,
                               const char *value) {
-  if (sensor == nullptr)
+  if (sensor == nullptr || value == nullptr)
     return;
   if (sensor->has_state() && sensor->state == value)
     return;
