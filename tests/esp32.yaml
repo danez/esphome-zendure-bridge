@@ -10,9 +10,7 @@ esp32:
       ignore_efuse_mac_crc: true
 
 external_components:
-  - source:
-      type: local
-      path: ../components
+  - source: ../components
     components:
       - zendure
 

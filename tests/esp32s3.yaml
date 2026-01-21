@@ -9,9 +9,7 @@ esp32:
     type: esp-idf
 
 external_components:
-  - source:
-      type: local
-      path: ../components
+  - source: ../components
     components:
       - zendure
 

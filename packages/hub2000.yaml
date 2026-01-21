@@ -13,7 +13,7 @@ external_components:
     components: [ zendure ]
 
 esphome:
-  min_version: "2025.11.0"
+  min_version: "2026.1.0"
 
 json:
 
@@ -93,7 +93,7 @@ text_sensor:
               {"packNum", [](int value) { publish_state_if_changed(id(${id}_packNum), value); }},
               {"remainOutTime", [](int value) { publish_state_if_changed(id(${id}_remainOutTime), value / TIME_HOURS_SCALE); }},
               {"remainInputTime", [](int value) { publish_state_if_changed(id(${id}_remainInputTime), value / TIME_HOURS_SCALE); }},
-              {"masterSoftVersion", [](int value) { publish_state_if_changed(id(${id}_masterSoftVersion), decode_version(value)); }},
+              {"masterSoftVersion", [](int value) { publish_state_if_changed(id(${id}_masterSoftVersion), decode_version(value).c_str()); }},
               {"pass", [](int value) { publish_state_if_changed(id(${id}_pass), !!value); }},
               {"outputLimit", [](int value) { publish_state_if_changed(id(${id}_outputLimit), value); }},
               {"socSet", [](int value) { publish_state_if_changed(id(${id}_socSet), value / PERCENT_SCALE); }},
