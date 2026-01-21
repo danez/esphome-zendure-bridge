@@ -24,7 +24,7 @@ std::string decode_version(const int encoded) {
 }
 
 void publish_state_if_changed(esphome::sensor::Sensor *sensor, float value) {
-  if (sensor == nullptr)
+  if (!sensor)
     return;
   // We only report 2 or 3 decimal places, so we need to check if the value is
   // close enough
@@ -34,7 +34,7 @@ void publish_state_if_changed(esphome::sensor::Sensor *sensor, float value) {
 }
 
 void publish_state_if_changed(esphome::number::Number *sensor, float value) {
-  if (sensor == nullptr)
+  if (!sensor)
     return;
   // We only report 2 or 3 decimal places, so we need to check if the value is
   // close enough
@@ -45,7 +45,16 @@ void publish_state_if_changed(esphome::number::Number *sensor, float value) {
 
 void publish_state_if_changed(esphome::text_sensor::TextSensor *sensor,
                               const char *value) {
-  if (sensor == nullptr || value == nullptr)
+  if (!sensor || value == nullptr)
+    return;
+  if (sensor->has_state() && sensor->state == value)
+    return;
+  sensor->publish_state(value);
+}
+
+void publish_state_if_changed(esphome::text_sensor::TextSensor *sensor,
+                              const std::string &value) {
+  if (!sensor)
     return;
   if (sensor->has_state() && sensor->state == value)
     return;
@@ -54,7 +63,7 @@ void publish_state_if_changed(esphome::text_sensor::TextSensor *sensor,
 
 void publish_state_if_changed(esphome::binary_sensor::BinarySensor *sensor,
                               bool value) {
-  if (sensor == nullptr)
+  if (!sensor)
     return;
   if (sensor->has_state() && sensor->state == value)
     return;
@@ -63,7 +72,7 @@ void publish_state_if_changed(esphome::binary_sensor::BinarySensor *sensor,
 
 void publish_state_if_changed(esphome::select::Select *sensor,
                               const char *value) {
-  if (sensor == nullptr)
+  if (!sensor || value == nullptr)
     return;
   if (sensor->has_state() && sensor->current_option() == value)
     return;
@@ -71,7 +80,7 @@ void publish_state_if_changed(esphome::select::Select *sensor,
 }
 
 void publish_state_if_changed(esphome::switch_::Switch *sensor, bool value) {
-  if (sensor == nullptr)
+  if (!sensor)
     return;
   if (sensor->state == value)
     return;
@@ -103,8 +112,8 @@ void handle_sensor_object(JsonObject &obj, const sensor_handler_map_t &handlers,
       // are not, but we do not report them
       handler->second(value);
     } else {
-      ESP_LOGW(device_id.c_str(), "Unhandled sensor key '%s' with value '%d'",
-               key, value);
+      ESP_LOGW(device_id.c_str(), "Unhandled sensor key '%.*s' with value '%d'",
+               (int)key.size(), key.data(), value);
     }
   }
 }

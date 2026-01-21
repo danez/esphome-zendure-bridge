@@ -32,10 +32,14 @@ void publish_state_if_changed(esphome::sensor::Sensor *sensor, float value);
 void publish_state_if_changed(esphome::number::Number *sensor, float value);
 void publish_state_if_changed(esphome::text_sensor::TextSensor *sensor,
                               const char *value);
+void publish_state_if_changed(esphome::text_sensor::TextSensor *sensor,
+                              const std : string &value);
 void publish_state_if_changed(esphome::binary_sensor::BinarySensor *sensor,
                               bool value);
 void publish_state_if_changed(esphome::select::Select *sensor,
                               const char *value);
+void publish_state_if_changed(esphome::select::Select *sensor,
+                              const std : string &value);
 void publish_state_if_changed(esphome::switch_::Switch *sensor, bool value);
 
 void find_and_set_device_key(JsonObject &root, std::string &global_device_id,
