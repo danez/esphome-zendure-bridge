@@ -82,7 +82,7 @@ void publish_state_if_changed(esphome::select::Select *sensor,
 void publish_state_if_changed(esphome::switch_::Switch *sensor, bool value) {
   if (!sensor)
     return;
-  if (sensor->state == value)
+  if (sensor->has_state() && sensor->state == value)
     return;
   sensor->publish_state(value);
 }
