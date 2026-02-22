@@ -94,7 +94,7 @@ text_sensor:
               {"outputPackPower", [](int value) { publish_state_if_changed(id(${id}_outputPackPower), value); }},
               {"electricLevel", [](int value) { publish_state_if_changed(id(${id}_electricLevel), value); }},
               {"packInputPower", [](int value) { publish_state_if_changed(id(${id}_packInputPower), value); }},
-              {"packNum", [](int value) { publish_state_if_changed(id(${id}_packNum), value); }},
+              {"packNum", [](int value) { publish_state_if_changed(id(${id}_packNum), std::to_string(value)); }},
               {"remainOutTime", [](int value) { publish_state_if_changed(id(${id}_remainOutTime), value / TIME_HOURS_SCALE); }},
               {"remainInputTime", [](int value) { publish_state_if_changed(id(${id}_remainInputTime), value / TIME_HOURS_SCALE); }},
               {"MASTER", [](int value) { publish_state_if_changed(id(${id}_masterSoftVersion), decode_version(value).c_str()); }},
@@ -147,6 +147,12 @@ text_sensor:
     entity_category: diagnostic
     disabled_by_default: true
     id: "${id}_masterSoftVersion"
+    device_id: "${esphome_device_id}"
+  - platform: template
+    name: "${name} Pack Num"
+    entity_category: diagnostic
+    disabled_by_default: true
+    id: "${id}_packNum"
     device_id: "${esphome_device_id}"
 
 sensor:
@@ -266,13 +272,6 @@ sensor:
     unit_of_measurement: "h"
     accuracy_decimals: 2
     id: "${id}_remainInputTime"
-    device_id: "${esphome_device_id}"
-  - platform: template
-    name: "${name} Pack Num"
-    entity_category: diagnostic
-    disabled_by_default: true
-    accuracy_decimals: 0
-    id: "${id}_packNum"
     device_id: "${esphome_device_id}"
   - platform: template
     id: "${id}_hyperTmp"
