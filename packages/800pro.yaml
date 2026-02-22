@@ -10,8 +10,8 @@ defaults:
 external_components:
   # We use a fixed version to ensure compatibility with the current version of the Zendure bridge.
   # When changing the component, make sure to update the version here.
-  - source: github://danez/esphome-zendure-bridge@1.0.8
-    components: [ zendure ]
+  - source: github://danez/esphome-zendure-bridge@1.1.0
+    components: [zendure]
 
 esphome:
   min_version: "2026.1.0"
