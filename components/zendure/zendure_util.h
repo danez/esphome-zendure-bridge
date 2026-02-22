@@ -1,68 +1,56 @@
 #pragma once
-#include "esphome/components/json/json_util.h"
-#include <string>
 #include <functional>
+#include <string>
+
+#include "esphome/components/binary_sensor/binary_sensor.h"
+#include "esphome/components/json/json_util.h"
+#include "esphome/components/number/number.h"
+#include "esphome/components/select/select.h"
+#include "esphome/components/sensor/sensor.h"
+#include "esphome/components/switch/switch.h"
+#include "esphome/components/text_sensor/text_sensor.h"
 
 namespace esphome {
-    namespace zendure {
-        using sensor_handler_t = std::function<void(int)>;
-        using sensor_handler_map_t = std::unordered_map<std::string, sensor_handler_t>;
+namespace zendure {
+using sensor_handler_t = std::function<void(int)>;
+using sensor_handler_map_t =
+    std::unordered_map<std::string_view, sensor_handler_t>;
 
-        using battery_handler_t = std::function<void(JsonObject)>;
-        using battery_handler_map_t = std::unordered_map<std::string, battery_handler_t>;
+using battery_handler_t = std::function<void(JsonObject)>;
+using battery_handler_map_t =
+    std::unordered_map<std::string_view, battery_handler_t>;
 
-        constexpr float TEMPERATURE_OFFSET = 273.15f;
-        constexpr float TEMPERATURE_SCALE = 10.0f;
-        constexpr float VOLTAGE_SCALE = 100.0f;
-        constexpr float PERCENT_SCALE = 10.0f;
-        constexpr float TIME_HOURS_SCALE = 60.0f;
+constexpr float TEMPERATURE_OFFSET = 273.15f;
+constexpr float TEMPERATURE_SCALE = 10.0f;
+constexpr float VOLTAGE_SCALE = 100.0f;
+constexpr float PERCENT_SCALE = 10.0f;
+constexpr float TIME_HOURS_SCALE = 60.0f;
 
-        std::string decode_version(const int encoded);
+std::string decode_version(const int encoded);
 
-        void publish_state_if_changed(
-            esphome::sensor::Sensor* sensor,
-            float value
-        );
-        void publish_state_if_changed(
-            esphome::number::Number* sensor,
-            float value
-        );
-        void publish_state_if_changed(
-            esphome::text_sensor::TextSensor* sensor,
-            const std::string& value
-        );
-        void publish_state_if_changed(
-            esphome::binary_sensor::BinarySensor* sensor,
-            bool value
-        );
-        void publish_state_if_changed(
-            esphome::select::Select* sensor,
-            const std::string& value
-        );
-        void publish_state_if_changed(
-            esphome::switch_::Switch* sensor,
-            bool value
-        );
+void publish_state_if_changed(esphome::sensor::Sensor *sensor, float value);
+void publish_state_if_changed(esphome::number::Number *sensor, float value);
+void publish_state_if_changed(esphome::text_sensor::TextSensor *sensor,
+                              const char *value);
+void publish_state_if_changed(esphome::text_sensor::TextSensor *sensor,
+                              const std::string &value);
+void publish_state_if_changed(esphome::binary_sensor::BinarySensor *sensor,
+                              bool value);
+void publish_state_if_changed(esphome::select::Select *sensor,
+                              const char *value);
+void publish_state_if_changed(esphome::switch_::Switch *sensor, bool value);
 
-        void find_and_set_device_key(
-            JsonObject& root,
-            std::string& global_device_id,
-            const std::string& device_id
-        );
+void find_and_set_device_key(JsonObject &root, std::string &global_device_id,
+                             const std::string &device_id);
 
-        // Function to iterate over a JSON object and apply handlers
-        void handle_sensor_object(
-            JsonObject& obj,
-            const sensor_handler_map_t& handlers,
-            const std::string& device_id
-        );
+// Function to iterate over a JSON object and apply handlers
+void handle_sensor_object(JsonObject &obj, const sensor_handler_map_t &handlers,
+                          const std::string &device_id);
 
-        void handle_device_message(
-            JsonObject& root,
-            const sensor_handler_map_t& property_handlers,
-            const battery_handler_map_t& pack_handlers,
-            std::string& global_device_id,
-            const std::string& device_id
-        );
-    }
-}
+void handle_device_message(JsonObject &root,
+                           const sensor_handler_map_t &property_handlers,
+                           const battery_handler_map_t &pack_handlers,
+                           std::string &global_device_id,
+                           const std::string &device_id);
+} // namespace zendure
+} // namespace esphome
