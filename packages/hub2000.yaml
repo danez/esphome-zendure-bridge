@@ -72,6 +72,19 @@ ble_client:
         - esp32_ble_tracker.start_scan:
             continuous: true
 
+button:
+  - platform: template
+    name: "${name} Refresh"
+    icon: "mdi:refresh"
+    entity_category: diagnostic
+    device_id: "${esphome_device_id}"
+    on_press:
+      - !include
+        file: includes/ble-get-all.yaml
+        vars:
+          device_id: "${id}"
+          time_id: "${time_id}"
+
 text_sensor:
   - platform: ble_client
     id: "zendure_ble_receiver_${id}"
