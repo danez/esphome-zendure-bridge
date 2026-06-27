@@ -1,6 +1,8 @@
 #pragma once
 #include <functional>
 #include <string>
+#include <string_view>
+#include <unordered_map>
 
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/components/json/json_util.h"
