@@ -13,19 +13,21 @@ if:
         value: !lambda |-
           char buffer[128];
           int timestamp = (int) id(${time_id}).now().timestamp;
+          int propValue = ${value};
           int len = snprintf(
             buffer,
             sizeof(buffer),
-            "{\"method\":\"write\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"deviceId\":\"%s\",\"properties\":{\"${key}\":${value}}}",
+            "{\"method\":\"write\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"deviceId\":\"%s\",\"properties\":{\"${key}\":%d}}",
             timestamp,
-            id(${device_id}_device_id).c_str()
+            id(${device_id}_device_id).c_str(),
+            propValue
           );
           if (len >= sizeof(buffer)) {
             ESP_LOGE("${device_id}", "Buffer overflow detected! Partial buffer: '%s'", buffer);
             return {};
           }
           std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
-          ESP_LOGI("${device_id}", "Sending Command '%s'", buffer);
+          ESP_LOGD("${device_id}", "Sending Command '%s'", buffer);
           return value;
   else:
     - lambda: |-

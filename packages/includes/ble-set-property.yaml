@@ -1,22 +1,33 @@
-ble_client.ble_write:
-  id: "zendure_ble_${device_id}"
-  service_uuid: a002
-  characteristic_uuid: c304
-  value: !lambda |-
-    char buffer[128];
-    int timestamp = (int) id(${time_id}).now().timestamp;
-    int len = snprintf(
-      buffer,
-      sizeof(buffer),
-      "{\"method\":\"write\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"deviceId\":\"%s\",\"properties\":{\"${key}\":%.0f${append_value}}}",
-      timestamp,
-      id(${device_id}_device_id).c_str(),
-      x
-    );
-    if (len >= sizeof(buffer)) {
-      ESP_LOGE("${device_id}", "Buffer overflow detected! Partial buffer: '%s'", buffer);
-      return {};
-    }
-    std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
-    ESP_LOGD("${device_id}", "Sending Command '%s'", buffer);
-    return value;
+if:
+  condition:
+    lambda: |-
+      auto state = id(zendure_ble_${device_id}).state();
+      return !id(${device_id}_device_id).empty() &&
+             (state == esphome::esp32_ble_tracker::ClientState::CONNECTED ||
+              state == esphome::esp32_ble_tracker::ClientState::ESTABLISHED);
+  then:
+    - ble_client.ble_write:
+        id: "zendure_ble_${device_id}"
+        service_uuid: a002
+        characteristic_uuid: c304
+        value: !lambda |-
+          char buffer[128];
+          int timestamp = (int) id(${time_id}).now().timestamp;
+          int len = snprintf(
+            buffer,
+            sizeof(buffer),
+            "{\"method\":\"write\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"deviceId\":\"%s\",\"properties\":{\"${key}\":%.0f${append_value}}}",
+            timestamp,
+            id(${device_id}_device_id).c_str(),
+            x
+          );
+          if (len >= sizeof(buffer)) {
+            ESP_LOGE("${device_id}", "Buffer overflow detected! Partial buffer: '%s'", buffer);
+            return {};
+          }
+          std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
+          ESP_LOGD("${device_id}", "Sending Command '%s'", buffer);
+          return value;
+  else:
+    - lambda: |-
+        ESP_LOGD("${device_id}", "Skipping ${key} write because BLE is not connected or device ID is unknown");

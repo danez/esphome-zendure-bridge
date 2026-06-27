@@ -41,11 +41,11 @@ interval:
           condition:
             lambda: 'return std::string("${no_polling}") != "true";'
           then:
-      - !include
-        file: includes/ble-get-all.yaml
-        vars:
-          device_id: "${id}"
-          time_id: "${time_id}"
+            - !include
+              file: includes/ble-get-all.yaml
+              vars:
+                device_id: "${id}"
+                time_id: "${time_id}"
 
 ble_client:
   - mac_address: ${mac_address}
@@ -308,18 +308,13 @@ select:
     restore_value: true
     device_id: "${esphome_device_id}"
     set_action:
-      - ble_client.ble_write:
-          id: "zendure_ble_${id}"
-          service_uuid: a002
-          characteristic_uuid: c304
-          value: !lambda |-
-            char buffer[120];
-            int timestamp = (int) id(${time_id}).now().timestamp;
-            int propValue = x == "input" ? 1 : 2;
-            snprintf(buffer, sizeof(buffer), "{\"method\":\"write\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"deviceId\":\"%s\",\"properties\":{\"acMode\":%d}}", timestamp, id(${id}_device_id).c_str(), propValue);
-            std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
-            ESP_LOGD("${id}", "Sending Command '%s'", buffer);
-            return value;
+      - !include
+        file: includes/ble-set-property-select.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: acMode
+          value: 'x == "input" ? 1 : 2'
   - platform: template
     name: "${name} PV Brand"
     id: "${id}_pvBrand"
@@ -337,18 +332,13 @@ select:
     restore_value: true
     device_id: "${esphome_device_id}"
     set_action:
-      - ble_client.ble_write:
-          id: "zendure_ble_${id}"
-          service_uuid: a002
-          characteristic_uuid: c304
-          value: !lambda |-
-            char buffer[120];
-            int timestamp = (int) id(${time_id}).now().timestamp;
-            int propValue = x == "Other" ? 0 : (x == "Hoymiles" ? 1 : (x == "Enphase" ? 2 : (x == "APsystems" ? 3 : (x == "Anker" ? 4 : (x == "Deye" ? 5 : (x == "BossWerk" ? 6 : 7))))));
-            snprintf(buffer, sizeof(buffer), "{\"method\":\"write\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"deviceId\":\"%s\",\"properties\":{\"pvBrand\":%d}}", timestamp, id(${id}_device_id).c_str(), propValue);
-            std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
-            ESP_LOGD("${id}", "Sending Command '%s'", buffer);
-            return value;
+      - !include
+        file: includes/ble-set-property-select.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: pvBrand
+          value: 'x == "Other" ? 0 : (x == "Hoymiles" ? 1 : (x == "Enphase" ? 2 : (x == "APsystems" ? 3 : (x == "Anker" ? 4 : (x == "Deye" ? 5 : (x == "BossWerk" ? 6 : 7))))))'
   - platform: template
     name: "${name} Hub State"
     id: "${id}_hubState"
@@ -360,18 +350,13 @@ select:
     restore_value: true
     device_id: "${esphome_device_id}"
     set_action:
-      - ble_client.ble_write:
-          id: "zendure_ble_${id}"
-          service_uuid: a002
-          characteristic_uuid: c304
-          value: !lambda |-
-            char buffer[120];
-            int timestamp = (int) id(${time_id}).now().timestamp;
-            int propValue = x == "Standby" ? 0 : 1;
-            snprintf(buffer, sizeof(buffer), "{\"method\":\"write\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"deviceId\":\"%s\",\"properties\":{\"hubState\":%d}}", timestamp, id(${id}_device_id).c_str(), propValue);
-            std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
-            ESP_LOGD("${id}", "Sending Command '%s'", buffer);
-            return value;
+      - !include
+        file: includes/ble-set-property-select.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: hubState
+          value: 'x == "Standby" ? 0 : 1'
   - platform: template
     name: "${name} Pass Mode"
     id: "${id}_passMode"
@@ -384,18 +369,13 @@ select:
     restore_value: true
     device_id: "${esphome_device_id}"
     set_action:
-      - ble_client.ble_write:
-          id: "zendure_ble_${id}"
-          service_uuid: a002
-          characteristic_uuid: c304
-          value: !lambda |-
-            char buffer[120];
-            int timestamp = (int) id(${time_id}).now().timestamp;
-            int propValue = x == "Auto" ? 0 : (x == "Always-Off" ? 1 : 2);
-            snprintf(buffer, sizeof(buffer), "{\"method\":\"write\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"deviceId\":\"%s\",\"properties\":{\"passMode\":%d}}", timestamp, id(${id}_device_id).c_str(), propValue);
-            std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
-            ESP_LOGD("${id}", "Sending Command '%s'", buffer);
-            return value;
+      - !include
+        file: includes/ble-set-property-select.yaml
+        vars:
+          time_id: "${time_id}"
+          device_id: "${id}"
+          key: passMode
+          value: 'x == "Auto" ? 0 : (x == "Always-Off" ? 1 : 2)'
 
 switch:
   - platform: ble_client

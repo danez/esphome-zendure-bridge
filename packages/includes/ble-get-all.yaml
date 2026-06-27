@@ -1,11 +1,21 @@
-ble_client.ble_write:
-  id: "zendure_ble_${device_id}"
-  service_uuid: a002
-  characteristic_uuid: c304
-  value: !lambda |-
-    char buffer[86];
-    int timestamp = (int) id(${time_id}).now().timestamp;
-    snprintf(buffer, sizeof(buffer), "{\"method\":\"read\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"properties\":[\"getAll\"]}", timestamp);
-    std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
-    ESP_LOGD("${device_id}", "Sending Command '%s'", buffer);
-    return value;
+if:
+  condition:
+    lambda: |-
+      auto state = id(zendure_ble_${device_id}).state();
+      return state == esphome::esp32_ble_tracker::ClientState::CONNECTED ||
+             state == esphome::esp32_ble_tracker::ClientState::ESTABLISHED;
+  then:
+    - ble_client.ble_write:
+        id: "zendure_ble_${device_id}"
+        service_uuid: a002
+        characteristic_uuid: c304
+        value: !lambda |-
+          char buffer[86];
+          int timestamp = (int) id(${time_id}).now().timestamp;
+          snprintf(buffer, sizeof(buffer), "{\"method\":\"read\",\"timestamp\":\"%d\",\"messageId\":\"none\",\"properties\":[\"getAll\"]}", timestamp);
+          std::vector<uint8_t> value(buffer, buffer + strlen(buffer));
+          ESP_LOGD("${device_id}", "Sending Command '%s'", buffer);
+          return value;
+  else:
+    - lambda: |-
+        ESP_LOGD("${device_id}", "Skipping getAll because BLE is not connected");
