@@ -47,6 +47,8 @@ packages:
           time_id: esptime # the id of the time component above
           name: "Hub 2000" # choose how you want your device to be named, can be any name and will also be used in the Home Assistant ID and name. Make sure that every device has a different name.
           id: "hub_2000" # the internal ID of the device, if you have multiple devices, the id needs to be different
+          get_all_interval: 10min # optional: watchdog refresh interval for getAll after BLE connect
+          no_polling: "false" # optional: set to "true" to disable scheduled getAll refreshes
       - path: packages/ab2000.yaml # choose your battery: ab1000, ab2000
         vars:
           name: "Hub 2000 Battery 1" # choose how you want your battery to be named, can be any name, and will also be used in the Home Assistant ID and name
@@ -61,6 +63,12 @@ packages:
     refresh: 1d # Update the package once a day
 ```
   5. Follow the steps of `ESPHome Device Builder` in Home Assistant to get your ESP device flashed.
+
+### Polling Behavior
+
+The controller packages send `getInfo` and `getAll` once after each BLE connection. After that, most values are updated from BLE notifications. By default, the bridge sends a watchdog `getAll` every 10 minutes to recover stale values.
+
+To reduce BLE traffic further, set `no_polling: "true"` on the controller package. In that mode, scheduled `getAll` polling is disabled, but the Home Assistant `${name} Refresh` button can still request a manual `getAll`.
 
 ## Guides
 

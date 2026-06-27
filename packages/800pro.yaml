@@ -5,6 +5,8 @@ defaults:
   output_watt_limit: "800"
   input_watt_limit: "800"
   esphome_device_id: ""
+  get_all_interval: "10min"
+  no_polling: "false"
   # mac_address: ""
 
 external_components:
@@ -32,14 +34,13 @@ globals:
     restore_value: no
 
 interval:
-  - interval: 1min
+  - interval: ${get_all_interval}
     startup_delay: 75s
     then:
-      - !include
-        file: includes/ble-get-info.yaml
-        vars:
-          device_id: "${id}"
-          time_id: "${time_id}"
+      - if:
+          condition:
+            lambda: 'return std::string("${no_polling}") != "true";'
+          then:
       - !include
         file: includes/ble-get-all.yaml
         vars:
@@ -61,6 +62,7 @@ ble_client:
           vars:
             device_id: "${id}"
             time_id: "${time_id}"
+        - delay: 2s
         - !include
           file: includes/ble-get-all.yaml
           vars:
