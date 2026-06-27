@@ -144,7 +144,7 @@ text_sensor:
               {"inverseMaxPower", [](int value) { publish_state_if_changed(id(${id}_inverseMaxPower), value); }}
             };
 
-            json::parse_json(x, [](JsonObject root) -> bool {
+            if (!json::parse_json(x, [](JsonObject root) -> bool {
               handle_device_message(
                 root,
                 property_handlers,
@@ -154,7 +154,9 @@ text_sensor:
               );
 
               return true;
-            });
+            })) {
+              ESP_LOGW("${id}", "Failed to parse BLE notification: %s", x.c_str());
+            }
   - platform: template
     id: "${id}_packState"
     name: "${name} Pack State"
