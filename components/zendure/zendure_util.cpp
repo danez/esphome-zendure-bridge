@@ -93,12 +93,14 @@ void find_and_set_device_key(JsonObject &root, std::string &global_device_id,
   if (!global_device_id.empty())
     return;
 
-  const char *dev = root["deviceId"] | nullptr;
-  if (!dev)
+  const char *dev = root["deviceId"].as<const char *>();
+  if (dev == nullptr || dev[0] == '\0') {
+    ESP_LOGD(device_id.c_str(), "Received message without device ID");
     return;
+  }
 
   global_device_id = dev;
-  ESP_LOGI(device_id.c_str(), "Found device ID: %s", dev);
+  ESP_LOGI(device_id.c_str(), "Found device ID: %s", global_device_id.c_str());
 }
 
 void handle_sensor_object(JsonObject &obj, const sensor_handler_map_t &handlers,
