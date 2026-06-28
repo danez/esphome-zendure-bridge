@@ -100,6 +100,8 @@ text_sensor:
     on_notify:
       then:
         - lambda: |-
+            ESP_LOGD("${id}", "Received BLE notification: %s", x.c_str());
+
             static const sensor_handler_map_t property_handlers = {
               {"outputHomePower", [](int value) { publish_state_if_changed(id(${id}_outputHomePower), value); }},
               {"solarPower1", [](int value) { publish_state_if_changed(id(${id}_solarPower1), value); }},
