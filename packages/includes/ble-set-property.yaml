@@ -2,6 +2,16 @@ if:
   condition:
     lambda: |-
       auto state = id(zendure_ble_${device_id}).state();
+      if (id(${device_id}_${key}).has_state()) {
+        float diff = id(${device_id}_${key}).state - x;
+        if (diff < 0.0f)
+          diff = -diff;
+        if (diff < 0.0001f) {
+          ESP_LOGD("${device_id}", "Skipping ${key} write because value is already %.0f", x);
+          return false;
+        }
+      }
+
       return !id(${device_id}_device_id).empty() &&
              (state == esphome::esp32_ble_tracker::ClientState::CONNECTED ||
               state == esphome::esp32_ble_tracker::ClientState::ESTABLISHED);

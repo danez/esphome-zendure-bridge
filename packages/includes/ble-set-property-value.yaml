@@ -2,6 +2,12 @@ if:
   condition:
     lambda: |-
       auto state = id(zendure_ble_${device_id}).state();
+      bool requested_value = !!${value};
+      if (id(${device_id}_${key}).has_state() && id(${device_id}_${key}).state == requested_value) {
+        ESP_LOGD("${device_id}", "Skipping ${key} write because value is already %d", requested_value);
+        return false;
+      }
+
       return !id(${device_id}_device_id).empty() &&
              (state == esphome::esp32_ble_tracker::ClientState::CONNECTED ||
               state == esphome::esp32_ble_tracker::ClientState::ESTABLISHED);
