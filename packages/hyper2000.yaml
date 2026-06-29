@@ -307,7 +307,7 @@ select:
     options:
       - "input"
       - "output"
-    optimistic: true
+    optimistic: false
     restore_value: true
     device_id: "${esphome_device_id}"
     set_action:
@@ -331,7 +331,7 @@ select:
       - "Deye"
       - "BossWerk"
       - "TSUN"
-    optimistic: true
+    optimistic: false
     restore_value: true
     device_id: "${esphome_device_id}"
     set_action:
@@ -349,7 +349,7 @@ select:
     options:
       - "Standby"
       - "Shut Down"
-    optimistic: true
+    optimistic: false
     restore_value: true
     device_id: "${esphome_device_id}"
     set_action:
@@ -368,7 +368,7 @@ select:
       - "Auto"
       - "Always-Off"
       - "Always-On"
-    optimistic: true
+    optimistic: false
     restore_value: true
     device_id: "${esphome_device_id}"
     set_action:
@@ -391,7 +391,7 @@ switch:
   - platform: template
     name: "${name} Lamp Switch"
     id: "${id}_lampSwitch"
-    optimistic: true
+    optimistic: false
     icon: "mdi:led-on"
     device_id: "${esphome_device_id}"
     turn_on_action:
@@ -413,7 +413,7 @@ switch:
   - platform: template
     name: "${name} Auto Recover"
     id: "${id}_autoRecover"
-    optimistic: true
+    optimistic: false
     icon: "mdi:restore"
     device_id: "${esphome_device_id}"
     turn_on_action:
@@ -443,7 +443,7 @@ number:
     min_value: 0
     max_value: ${output_watt_limit}
     step: 1
-    optimistic: true
+    optimistic: false
     device_id: "${esphome_device_id}"
     set_action:
       - !include
@@ -462,7 +462,7 @@ number:
     min_value: 0
     max_value: ${input_watt_limit}
     step: 1
-    optimistic: true
+    optimistic: false
     device_id: "${esphome_device_id}"
     set_action:
       - !include
@@ -481,7 +481,7 @@ number:
     min_value: 0
     max_value: 100
     step: 1
-    optimistic: true
+    optimistic: false
     device_id: "${esphome_device_id}"
     set_action:
       - !include
@@ -500,7 +500,7 @@ number:
     min_value: 0
     max_value: 100
     step: 1
-    optimistic: true
+    optimistic: false
     device_id: "${esphome_device_id}"
     set_action:
       - !include
@@ -520,7 +520,7 @@ number:
     max_value: ${output_watt_limit}
     step: 1
     icon: "mdi:power-plug"
-    optimistic: true
+    optimistic: false
     device_id: "${esphome_device_id}"
     set_action:
       - !include
